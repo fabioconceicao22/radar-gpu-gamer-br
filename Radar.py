@@ -170,22 +170,22 @@ gpus = [
         "Link": "https://www.pichau.com.br/placa-de-video-sapphire-radeon-rx-7600-pulse-oc-8gb-gddr6-128-bit-11324-01-20g"
     },
 
-    {
-        "GPU": "Radeon RX 6600 8GB",
-        "Modelo": "ASRock Challenger D",
-        "Marca": "AMD",
-        "Loja": "Mercado Livre",
-        "Preco Atual": 1599.90,
-        "Preco Antigo": 1899.99,
-        "VRAM": 8,
-        "FPS 1080p": 88,
-        "FPS 1440p": 52,
-        "Streaming Score": 64,
-        "Gamer Score": 84,
-        "Consumo W": 132,
-        "Link": "https://meli.la/2Lw3gRh"
-    },
-
+{
+    "GPU": "Radeon RX 6600 8GB",
+    "Modelo": "ASRock Challenger D",
+    "Marca": "AMD",
+    "Loja": "Mercado Livre",
+    "Preco Atual": 1599.90,
+    "Preco Antigo": 1899.99,
+    "VRAM": 8,
+    "FPS 1080p": 88,
+    "FPS 1440p": 52,
+    "Streaming Score": 64,
+    "Gamer Score": 84,
+    "Consumo W": 132,
+    "Link": "https://meli.la/2Lw3gRh"
+},
+    
     {
         "GPU": "GeForce RTX 4060 8GB",
         "Modelo": "Galax 1-Click OC",
