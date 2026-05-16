@@ -3,7 +3,7 @@ import pandas as pd
 
 # ============================================================
 # Radar GPU Gamer BR
-# Versão compacta + correção toolbar dos gráficos
+# Dashboard Gamer / Streamer
 # ============================================================
 
 st.set_page_config(
@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # ============================================================
-# CSS
+# CSS DARK PREMIUM
 # ============================================================
 
 st.markdown("""
@@ -40,12 +40,15 @@ h1, h2, h3, h4, h5, h6, p, span, label {
     color: #f8fafc !important;
 }
 
+/* Sidebar */
+
 section[data-testid="stSidebar"] {
     background-color: #111827;
     border-right: 1px solid #1e293b;
 }
 
-/* Selectbox visível */
+/* Selectbox */
+
 .stSelectbox div[data-baseweb="select"] {
     background-color: #ffffff !important;
     color: #111827 !important;
@@ -69,10 +72,10 @@ li[role="option"] {
 
 li[role="option"]:hover {
     background-color: #e5e7eb !important;
-    color: #111827 !important;
 }
 
 /* Cards */
+
 [data-testid="stMetric"] {
     background: linear-gradient(135deg,#111827,#172554);
     border: 1px solid #334155;
@@ -92,11 +95,8 @@ li[role="option"]:hover {
     font-size: 20px !important;
 }
 
-[data-testid="stMetricDelta"] {
-    font-size: 12px !important;
-}
-
 /* Tabela */
+
 [data-testid="stDataFrame"] {
     background-color: #111827;
     border-radius: 14px;
@@ -104,14 +104,8 @@ li[role="option"]:hover {
     padding: 6px;
 }
 
-/* Alertas */
-.stAlert {
-    border-radius: 12px;
-    border: 1px solid #334155;
-    padding: 8px !important;
-}
+/* Remove toolbar gráfica */
 
-/* Remove toolbar branca dos gráficos */
 .vega-embed summary {
     display: none !important;
 }
@@ -120,27 +114,8 @@ li[role="option"]:hover {
     display: none !important;
 }
 
-/* Links */
-a {
-    color: #38bdf8 !important;
-}
-
-/* Divisores */
-hr {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-    border-color: #334155;
-}
-
-/* Títulos */
-.section-title {
-    font-size: 22px;
-    font-weight: 800;
-    margin-top: 6px;
-    margin-bottom: 4px;
-}
-
 /* Hero */
+
 .hero-box {
     background: linear-gradient(135deg,#111827,#1e3a8a);
     padding: 14px 18px;
@@ -153,8 +128,6 @@ hr {
 .hero-title {
     font-size: 30px;
     font-weight: 900;
-    color: #f8fafc;
-    line-height: 1.1;
 }
 
 .hero-subtitle {
@@ -163,59 +136,63 @@ hr {
     margin-top: 4px;
 }
 
-div[data-testid="stVerticalBlock"] {
-    gap: 0.5rem;
-}
+/* Títulos */
 
-div[data-testid="stHorizontalBlock"] {
-    gap: 0.8rem;
+.section-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin-top: 6px;
+    margin-bottom: 4px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 # ============================================================
-# DADOS
+# DADOS ATUALIZADOS
 # ============================================================
 
 gpus = [
+
     {
         "GPU": "Radeon RX 7600 8GB",
         "Modelo": "Sapphire Pulse",
         "Marca": "AMD",
-        "Loja": "Kabum",
-        "Preco Atual": 1699,
-        "Preco Antigo": 1899,
+        "Loja": "Pichau",
+        "Preco Atual": 1679.99,
+        "Preco Antigo": 1899.99,
         "VRAM": 8,
         "FPS 1080p": 112,
         "FPS 1440p": 72,
         "Streaming Score": 72,
         "Gamer Score": 91,
         "Consumo W": 165,
-        "Link": "https://www.kabum.com.br"
+        "Link": "https://www.pichau.com.br"
     },
+
     {
         "GPU": "Radeon RX 6600 8GB",
         "Modelo": "ASRock Challenger D",
         "Marca": "AMD",
-        "Loja": "Pichau",
-        "Preco Atual": 1299,
-        "Preco Antigo": 1499,
+        "Loja": "Mercado Livre",
+        "Preco Atual": 1952.07,
+        "Preco Antigo": 2099.99,
         "VRAM": 8,
         "FPS 1080p": 88,
         "FPS 1440p": 52,
         "Streaming Score": 64,
         "Gamer Score": 84,
         "Consumo W": 132,
-        "Link": "https://www.pichau.com.br"
+        "Link": "https://www.mercadolivre.com.br"
     },
+
     {
         "GPU": "GeForce RTX 4060 8GB",
         "Modelo": "MSI Ventus 2X OC",
         "Marca": "NVIDIA",
         "Loja": "Amazon",
-        "Preco Atual": 1849,
-        "Preco Antigo": 2099,
+        "Preco Atual": 3399.00,
+        "Preco Antigo": 3999.99,
         "VRAM": 8,
         "FPS 1080p": 108,
         "FPS 1440p": 68,
@@ -224,60 +201,65 @@ gpus = [
         "Consumo W": 115,
         "Link": "https://www.amazon.com.br"
     },
+
     {
         "GPU": "Intel Arc B580 12GB",
-        "Modelo": "Limited Edition",
+        "Modelo": "ASRock Challenger OC",
         "Marca": "Intel",
-        "Loja": "Terabyte",
-        "Preco Atual": 1999,
-        "Preco Antigo": 2199,
+        "Loja": "KaBuM!",
+        "Preco Atual": 2189.90,
+        "Preco Antigo": 2499.99,
         "VRAM": 12,
         "FPS 1080p": 116,
         "FPS 1440p": 78,
         "Streaming Score": 80,
         "Gamer Score": 89,
         "Consumo W": 190,
-        "Link": "https://www.terabyteshop.com.br"
+        "Link": "https://www.kabum.com.br"
     },
+
     {
         "GPU": "GeForce RTX 4070 SUPER 12GB",
         "Modelo": "ASUS Dual OC",
         "Marca": "NVIDIA",
-        "Loja": "Mercado Livre",
-        "Preco Atual": 3899,
-        "Preco Antigo": 4299,
+        "Loja": "eBay",
+        "Preco Atual": 4602.19,
+        "Preco Antigo": 4899.99,
         "VRAM": 12,
         "FPS 1080p": 178,
         "FPS 1440p": 132,
         "Streaming Score": 96,
         "Gamer Score": 94,
         "Consumo W": 220,
-        "Link": "https://www.mercadolivre.com.br"
+        "Link": "https://www.ebay.com"
     },
+
     {
         "GPU": "GeForce RTX 3060 12GB",
         "Modelo": "Galax 1-Click OC",
         "Marca": "NVIDIA",
-        "Loja": "Magalu",
-        "Preco Atual": 1799,
-        "Preco Antigo": 1999,
+        "Loja": "Amazon",
+        "Preco Atual": 1857.72,
+        "Preco Antigo": 2399.99,
         "VRAM": 12,
         "FPS 1080p": 96,
         "FPS 1440p": 62,
         "Streaming Score": 86,
         "Gamer Score": 82,
         "Consumo W": 170,
-        "Link": "https://www.magazineluiza.com.br"
+        "Link": "https://www.amazon.com.br/Placa-V%C3%ADdeo-GALAX-GeForce-1-Click/dp/B092CNSSV5"
     }
+
 ]
 
 df = pd.DataFrame(gpus)
 
 # ============================================================
-# FUNÇÃO DE SCORE
+# FUNÇÕES
 # ============================================================
 
 def calcular_score(row, foco):
+
     preco = row["Preco Atual"]
     fps_1080p = row["FPS 1080p"]
     fps_1440p = row["FPS 1440p"]
@@ -291,6 +273,7 @@ def calcular_score(row, foco):
     vram_score = vram * 5
 
     if foco == "Streamer":
+
         score = (
             custo_fps * 1000 * 0.25 +
             streaming * 0.35 +
@@ -300,6 +283,7 @@ def calcular_score(row, foco):
         )
 
     elif foco == "Gamer 1440p":
+
         custo_fps_1440 = fps_1440p / preco
 
         score = (
@@ -310,6 +294,7 @@ def calcular_score(row, foco):
         )
 
     else:
+
         score = (
             custo_fps * 1000 * 0.45 +
             gamer * 0.25 +
@@ -319,15 +304,18 @@ def calcular_score(row, foco):
 
     return round(score, 2)
 
+def formatar_moeda(valor):
+    return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
 # ============================================================
-# HEADER
+# HERO
 # ============================================================
 
 st.markdown("""
 <div class="hero-box">
     <div class="hero-title">🎮 Radar GPU Gamer BR</div>
     <div class="hero-subtitle">
-        Dashboard compacto para análise de GPUs gamer, streamer e custo-benefício.
+        Dashboard gamer para comparação de GPUs, custo-benefício e performance streamer.
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -337,6 +325,7 @@ st.markdown("""
 # ============================================================
 
 with st.sidebar:
+
     st.title("⚙️ Filtros")
 
     marca = st.selectbox(
@@ -352,8 +341,8 @@ with st.sidebar:
     preco_maximo = st.slider(
         "Preço máximo",
         min_value=1000,
-        max_value=5000,
-        value=4500,
+        max_value=6000,
+        value=6000,
         step=100
     )
 
@@ -374,63 +363,71 @@ df_filtrado["Score"] = df_filtrado.apply(
 )
 
 df_filtrado["Desconto %"] = (
-    ((df_filtrado["Preco Antigo"] - df_filtrado["Preco Atual"]) / df_filtrado["Preco Antigo"]) * 100
+    ((df_filtrado["Preco Antigo"] - df_filtrado["Preco Atual"])
+    / df_filtrado["Preco Antigo"]) * 100
 ).round(1)
 
 df_filtrado["Custo por FPS"] = (
     df_filtrado["Preco Atual"] / df_filtrado["FPS 1080p"]
 ).round(2)
 
-df_filtrado = df_filtrado.sort_values(by="Score", ascending=False)
+df_filtrado = df_filtrado.sort_values(
+    by="Score",
+    ascending=False
+)
 
 # ============================================================
-# INDICADORES
+# CARDS
 # ============================================================
 
-if not df_filtrado.empty:
-    melhor = df_filtrado.iloc[0]
-    menor_preco = df_filtrado.sort_values(by="Preco Atual").iloc[0]
-    maior_desconto = df_filtrado.sort_values(by="Desconto %", ascending=False).iloc[0]
+melhor = df_filtrado.iloc[0]
 
-    df_streamer = df.copy()
-    df_streamer["Score"] = df_streamer.apply(
-        lambda row: calcular_score(row, "Streamer"),
-        axis=1
-    )
+menor_preco = df_filtrado.sort_values(
+    by="Preco Atual"
+).iloc[0]
 
-    melhor_streamer = df_streamer.sort_values(
-        by="Score",
-        ascending=False
-    ).iloc[0]
+maior_desconto = df_filtrado.sort_values(
+    by="Desconto %",
+    ascending=False
+).iloc[0]
 
-    col1, col2, col3, col4 = st.columns(4)
+df_streamer = df.copy()
 
-    col1.metric(
-        "🏆 Custo-benefício",
-        melhor["GPU"],
-        f'Score {melhor["Score"]}'
-    )
+df_streamer["Score"] = df_streamer.apply(
+    lambda row: calcular_score(row, "Streamer"),
+    axis=1
+)
 
-    col2.metric(
-        "💰 Menor preço",
-        menor_preco["GPU"],
-        f'R$ {menor_preco["Preco Atual"]}'
-    )
+melhor_streamer = df_streamer.sort_values(
+    by="Score",
+    ascending=False
+).iloc[0]
 
-    col3.metric(
-        "📡 Streamer",
-        melhor_streamer["GPU"],
-        f'Score {melhor_streamer["Score"]}'
-    )
+col1, col2, col3, col4 = st.columns(4)
 
-    col4.metric(
-        "📉 Maior desconto",
-        f'{maior_desconto["Desconto %"]}%',
-        maior_desconto["Loja"]
-    )
+col1.metric(
+    "🏆 Melhor custo-benefício",
+    melhor["GPU"],
+    f'Score {melhor["Score"]}'
+)
 
-else:
-    st.warning("Nenhuma GPU encontrada com os filtros selecionados.")
+col2.metric(
+    "💰 Menor preço",
+    menor_preco["GPU"],
+    formatar_moeda(menor_preco["Preco Atual"])
+)
+
+col3.metric(
+    "📡 Melhor streamer",
+    melhor_streamer["GPU"],
+    f'Score {melhor_streamer["Score"]}'
+)
+
+col4.metric(
+    "📉 Maior desconto",
+    f'{maior_desconto["Desconto %"]}%',
+    maior_desconto["Loja"]
+)
 
 # ============================================================
 # INSIGHTS
@@ -445,21 +442,21 @@ i1, i2, i3 = st.columns(3)
 
 with i1:
     st.success(
-        f"Recomendada: {melhor['GPU']} - {melhor['Modelo']}"
+        f"GPU recomendada: {melhor['GPU']} - {melhor['Modelo']}"
     )
 
 with i2:
     st.info(
-        f"Menor preço: R$ {menor_preco['Preco Atual']} na {menor_preco['Loja']}"
+        f"Melhor preço: {formatar_moeda(menor_preco['Preco Atual'])}"
     )
 
 with i3:
     st.warning(
-        f"Foco: {foco}"
+        f"Modo atual: {foco}"
     )
 
 # ============================================================
-# RANKING
+# TABELA
 # ============================================================
 
 st.markdown(
@@ -467,12 +464,19 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+df_exibicao = df_filtrado.copy()
+
+df_exibicao["Preço Atual"] = df_exibicao["Preco Atual"].apply(formatar_moeda)
+
+df_exibicao["Preço Antigo"] = df_exibicao["Preco Antigo"].apply(formatar_moeda)
+
 colunas = [
     "GPU",
     "Modelo",
     "Marca",
     "Loja",
-    "Preco Atual",
+    "Preço Atual",
+    "Preço Antigo",
     "Desconto %",
     "VRAM",
     "FPS 1080p",
@@ -482,7 +486,7 @@ colunas = [
 ]
 
 st.dataframe(
-    df_filtrado[colunas],
+    df_exibicao[colunas],
     use_container_width=True,
     hide_index=True,
     height=260
@@ -500,7 +504,9 @@ st.markdown(
 g1, g2 = st.columns(2)
 
 with g1:
+
     st.write("### Score por GPU")
+
     st.bar_chart(
         df_filtrado.set_index("GPU")["Score"],
         height=220,
@@ -508,7 +514,9 @@ with g1:
     )
 
 with g2:
-    st.write("### Preço atual")
+
+    st.write("### Preço Atual")
+
     st.bar_chart(
         df_filtrado.set_index("GPU")["Preco Atual"],
         height=220,
@@ -516,7 +524,7 @@ with g2:
     )
 
 # ============================================================
-# LINKS DE COMPRA
+# LINKS
 # ============================================================
 
 st.markdown(
@@ -525,15 +533,21 @@ st.markdown(
 )
 
 for _, row in df_filtrado.iterrows():
-    c1, c2, c3, c4 = st.columns([4, 1, 1, 1])
+
+    c1, c2, c3, c4 = st.columns([4,1,1,1])
 
     c1.markdown(
         f"**{row['GPU']} - {row['Modelo']}**  \n"
         f"{row['Loja']}"
     )
 
-    c2.markdown(f"**R$ {row['Preco Atual']}**")
-    c3.markdown(f"Score: **{row['Score']}**")
+    c2.markdown(
+        f"**{formatar_moeda(row['Preco Atual'])}**"
+    )
+
+    c3.markdown(
+        f"Score: **{row['Score']}**"
+    )
 
     c4.markdown(
         f"""
