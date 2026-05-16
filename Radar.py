@@ -149,14 +149,14 @@ li[role="option"]:hover {
 """, unsafe_allow_html=True)
 
 # ============================================================
-# DADOS ATUALIZADOS
+# DADOS ATUALIZADOS COM LINKS REAIS
 # ============================================================
 
 gpus = [
 
     {
         "GPU": "Radeon RX 7600 8GB",
-        "Modelo": "Sapphire Pulse",
+        "Modelo": "Sapphire Pulse OC",
         "Marca": "AMD",
         "Loja": "Pichau",
         "Preco Atual": 1679.99,
@@ -167,7 +167,7 @@ gpus = [
         "Streaming Score": 72,
         "Gamer Score": 91,
         "Consumo W": 165,
-        "Link": "https://www.pichau.com.br"
+        "Link": "https://www.pichau.com.br/placa-de-video-sapphire-radeon-rx-7600-pulse-oc-8gb-gddr6-128-bit-11324-01-20g"
     },
 
     {
@@ -175,23 +175,23 @@ gpus = [
         "Modelo": "ASRock Challenger D",
         "Marca": "AMD",
         "Loja": "Mercado Livre",
-        "Preco Atual": 1952.07,
-        "Preco Antigo": 2099.99,
+        "Preco Atual": 1599.90,
+        "Preco Antigo": 1899.99,
         "VRAM": 8,
         "FPS 1080p": 88,
         "FPS 1440p": 52,
         "Streaming Score": 64,
         "Gamer Score": 84,
         "Consumo W": 132,
-        "Link": "https://www.mercadolivre.com.br"
+        "Link": "https://meli.la/2Lw3gRh"
     },
 
     {
         "GPU": "GeForce RTX 4060 8GB",
-        "Modelo": "MSI Ventus 2X OC",
+        "Modelo": "Galax 1-Click OC",
         "Marca": "NVIDIA",
         "Loja": "Amazon",
-        "Preco Atual": 3399.00,
+        "Preco Atual": 3399.99,
         "Preco Antigo": 3999.99,
         "VRAM": 8,
         "FPS 1080p": 108,
@@ -199,7 +199,7 @@ gpus = [
         "Streaming Score": 93,
         "Gamer Score": 88,
         "Consumo W": 115,
-        "Link": "https://www.amazon.com.br"
+        "Link": "https://www.amazon.com.br/Placa-Galax-Geforce-1-click-128bits/dp/B0CV5RYV78"
     },
 
     {
@@ -207,15 +207,15 @@ gpus = [
         "Modelo": "ASRock Challenger OC",
         "Marca": "Intel",
         "Loja": "KaBuM!",
-        "Preco Atual": 2189.90,
-        "Preco Antigo": 2499.99,
+        "Preco Atual": 1975.79,
+        "Preco Antigo": 2299.99,
         "VRAM": 12,
         "FPS 1080p": 116,
         "FPS 1440p": 78,
         "Streaming Score": 80,
         "Gamer Score": 89,
         "Consumo W": 190,
-        "Link": "https://www.kabum.com.br"
+        "Link": "https://www.kabum.com.br/produto/688497/placa-de-video-asrock-intel-arc-b580-challenger-12g-oc-12gb-gddr6-2740mhz-90-ga5lzz-00uanf"
     },
 
     {
@@ -377,7 +377,7 @@ df_filtrado = df_filtrado.sort_values(
 )
 
 # ============================================================
-# CARDS
+# INDICADORES
 # ============================================================
 
 melhor = df_filtrado.iloc[0]
