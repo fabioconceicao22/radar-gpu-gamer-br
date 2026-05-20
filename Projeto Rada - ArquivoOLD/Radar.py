@@ -285,10 +285,7 @@ def identificar_loja(link):
 
     if "ebay" in link:
         return "eBay"
-    
-    if "aliexpress" in link:
-        return "AliExpress"
-    
+
     return "Loja não identificada"
 
 
@@ -653,7 +650,7 @@ st.altair_chart(
 )
 
 # ============================================================
-# LINKS DE COMPRA
+# LINKS
 # ============================================================
 
 st.markdown(
@@ -663,57 +660,40 @@ st.markdown(
 
 for _, row in df_filtrado.iterrows():
 
-    c1, c2, c3, c4 = st.columns([4, 1.2, 1.2, 1.2])
+    c1, c2, c3, c4 = st.columns([4,1,1,1])
 
-    with c1:
-        st.markdown(
-            f"""
-            **{row['GPU']} - {row['Modelo']}**  
-            {row['Loja']}
-            """
-        )
+    c1.markdown(
+        f"**{row['GPU']} - {row['Modelo']}**  \n"
+        f"{row['Loja']}"
+    )
 
-    with c2:
-        st.markdown(
-            f"""
-            <div style="font-size:18px; font-weight:700; color:white; padding-top:8px;">
-                {formatar_moeda(row['Preco_Atual'])}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+    c2.markdown(
+        f"**{formatar_moeda(row['Preco_Atual'])}**"
+    )
 
-    with c3:
-        st.markdown(
-            f"""
-            <div style="font-size:16px; font-weight:700; color:white; padding-top:8px;">
-                Score: {row['Score']}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+    c3.markdown(
+        f"Score: **{row['Score']}**"
+    )
 
-    with c4:
-        st.markdown(
-            f"""
-            <a href="{row['Link']}" target="_blank" style="text-decoration:none;">
-                <div style="
-                    background: linear-gradient(135deg,#22c55e,#16a34a);
-                    color: white;
-                    padding: 11px 16px;
-                    border-radius: 10px;
-                    font-weight: 800;
-                    text-align: center;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-                ">
-                    🛒 Comprar
-                </div>
-            </a>
-            """,
-            unsafe_allow_html=True
-        )
+    c4.markdown(
+        f"""
+        <a href="{row['Link']}"
+           target="_blank"
+           rel="noopener noreferrer">
 
-    st.markdown(
-        "<hr style='border:0.5px solid #1e293b; margin:12px 0;'>",
+            <button style="
+                background: linear-gradient(135deg,#22c55e,#16a34a);
+                color: white;
+                border: none;
+                padding: 8px 14px;
+                border-radius: 10px;
+                font-weight: bold;
+                cursor: pointer;
+                width: 100%;
+            ">
+                🛒 Comprar
+            </button>
+        </a>
+        """,
         unsafe_allow_html=True
     )

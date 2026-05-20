@@ -41,10 +41,14 @@ h1, h2, h3, h4, h5, h6, p, span, label {
     color: #f8fafc !important;
 }
 
+/* Sidebar */
+
 section[data-testid="stSidebar"] {
     background-color: #111827;
     border-right: 1px solid #1e293b;
 }
+
+/* Selectbox */
 
 .stSelectbox div[data-baseweb="select"] {
     background-color: #ffffff !important;
@@ -71,6 +75,8 @@ li[role="option"]:hover {
     background-color: #e5e7eb !important;
 }
 
+/* Cards */
+
 [data-testid="stMetric"] {
     background: linear-gradient(135deg,#111827,#172554);
     border: 1px solid #334155;
@@ -90,12 +96,16 @@ li[role="option"]:hover {
     font-size: 20px !important;
 }
 
+/* Tabela */
+
 [data-testid="stDataFrame"] {
     background-color: #111827;
     border-radius: 14px;
     border: 1px solid #334155;
     padding: 6px;
 }
+
+/* Hero */
 
 .hero-box {
     background: linear-gradient(135deg,#111827,#1e3a8a);
@@ -135,8 +145,6 @@ base_tecnica = [
 
     {
         "GPU": "Radeon RX 7600 8GB",
-        "Modelo": "Sapphire Pulse OC",
-        "Marca": "AMD",
         "VRAM": 8,
         "FPS_1080p": 112,
         "FPS_1440p": 72,
@@ -148,8 +156,6 @@ base_tecnica = [
 
     {
         "GPU": "Radeon RX 6600 8GB",
-        "Modelo": "ASRock Challenger D",
-        "Marca": "AMD",
         "VRAM": 8,
         "FPS_1080p": 88,
         "FPS_1440p": 52,
@@ -161,8 +167,6 @@ base_tecnica = [
 
     {
         "GPU": "GeForce RTX 4060 8GB",
-        "Modelo": "Galax 1-Click OC",
-        "Marca": "NVIDIA",
         "VRAM": 8,
         "FPS_1080p": 108,
         "FPS_1440p": 68,
@@ -174,8 +178,6 @@ base_tecnica = [
 
     {
         "GPU": "Intel Arc B580 12GB",
-        "Modelo": "ASRock Challenger OC",
-        "Marca": "Intel",
         "VRAM": 12,
         "FPS_1080p": 116,
         "FPS_1440p": 78,
@@ -187,8 +189,6 @@ base_tecnica = [
 
     {
         "GPU": "GeForce RTX 4070 SUPER 12GB",
-        "Modelo": "Gigabyte Windforce OC",
-        "Marca": "NVIDIA",
         "VRAM": 12,
         "FPS_1080p": 178,
         "FPS_1440p": 132,
@@ -198,23 +198,8 @@ base_tecnica = [
         "Preco_Antigo": 4899.99
     },
 
-{
-        "GPU": "GeForce RTX 5060 EPIC-X RGB OC 8GB",
-        "Modelo": "EPIC-X RGB OC Triple Fan",
-        "Marca": "NVIDIA",
-        "VRAM": 12,
-        "FPS_1080p": 178,
-        "FPS_1440p": 132,
-        "Streaming_Score": 96,
-        "Gamer_Score": 94,
-        "Consumo_W": 220,
-        "Preco_Antigo": 4899.99
-    },
-    
     {
         "GPU": "GeForce RTX 3060 12GB",
-        "Modelo": "Galax 1-Click OC",
-        "Marca": "NVIDIA",
         "VRAM": 12,
         "FPS_1080p": 96,
         "FPS_1440p": 62,
@@ -233,18 +218,23 @@ df_base = pd.DataFrame(base_tecnica)
 # ============================================================
 
 def formatar_moeda(valor):
+
     try:
+
         return (
             f"R$ {float(valor):,.2f}"
             .replace(",", "X")
             .replace(".", ",")
             .replace("X", ".")
         )
+
     except Exception:
+
         return "R$ 0,00"
 
 
 def normalizar_preco(valor):
+
     if pd.isna(valor):
         return None
 
@@ -261,38 +251,13 @@ def normalizar_preco(valor):
 
     try:
         return float(valor)
+
     except Exception:
         return None
 
 
-def identificar_loja(link):
-    link = str(link).lower()
-
-    if "pichau" in link:
-        return "Pichau"
-
-    if "kabum" in link:
-        return "KaBuM!"
-
-    if "amazon" in link or "amzn.to" in link:
-        return "Amazon"
-
-    if "mercadolivre" in link or "meli.la" in link:
-        return "Mercado Livre"
-
-    if "terabyte" in link:
-        return "Terabyte"
-
-    if "ebay" in link:
-        return "eBay"
-    
-    if "aliexpress" in link:
-        return "AliExpress"
-    
-    return "Loja não identificada"
-
-
 def calcular_score(row, foco):
+
     preco = row["Preco_Atual"]
 
     if preco <= 0:
@@ -306,29 +271,45 @@ def calcular_score(row, foco):
     vram_score = row["VRAM"] * 5
 
     if foco == "Streamer":
+
         score = (
+
             custo_fps * 1000 * 0.25 +
+
             row["Streaming_Score"] * 0.35 +
+
             row["Gamer_Score"] * 0.20 +
+
             vram_score * 0.10 +
+
             eficiencia * 50 * 0.10
         )
 
     elif foco == "Gamer 1440p":
+
         custo_fps_1440 = fps_1440p / preco
 
         score = (
+
             custo_fps_1440 * 1000 * 0.45 +
+
             row["Gamer_Score"] * 0.25 +
+
             vram_score * 0.15 +
+
             eficiencia * 50 * 0.15
         )
 
     else:
+
         score = (
+
             custo_fps * 1000 * 0.45 +
+
             row["Gamer_Score"] * 0.25 +
+
             vram_score * 0.10 +
+
             eficiencia * 50 * 0.20
         )
 
@@ -345,76 +326,50 @@ def carregar_dados():
     caminho_csv = "data/precos_coletados.csv"
 
     if not os.path.exists(caminho_csv):
+
         st.error("Arquivo data/precos_coletados.csv não encontrado.")
         st.stop()
 
     df_precos = pd.read_csv(
         caminho_csv,
-        sep=None,
-        engine="python",
+        sep=";",
         encoding="utf-8-sig",
         on_bad_lines="skip"
     )
 
     df_precos.columns = [
-        str(col).strip().lower()
+        str(col).strip()
         for col in df_precos.columns
     ]
 
-    df_precos = df_precos.rename(columns={
-
-        "produto": "GPU",
-        "gpu": "GPU",
-
-        "site": "Loja",
-        "loja": "Loja",
-
-        "link": "Link",
-        "url": "Link",
-
-        "preco": "Preco_Atual",
-        "preço": "Preco_Atual",
-        "preco atual": "Preco_Atual",
-        "preço atual": "Preco_Atual",
-
-        "marca": "Marca",
-        "modelo": "Modelo",
-
-        "data_coleta": "Data_Coleta"
-    })
-
-    colunas_minimas = [
+    colunas_esperadas = [
         "GPU",
+        "Loja",
         "Link",
-        "Preco_Atual"
+        "Preco Atual",
+        "Marca",
+        "Modelo"
     ]
 
-    for coluna in colunas_minimas:
+    for coluna in colunas_esperadas:
+
         if coluna not in df_precos.columns:
-            st.error(f"Coluna obrigatória ausente no CSV: {coluna}")
+
+            st.error(f"Coluna ausente: {coluna}")
+
             st.write("Colunas encontradas:")
+
             st.write(df_precos.columns.tolist())
+
             st.stop()
 
-    if "Loja" not in df_precos.columns:
-        df_precos["Loja"] = df_precos["Link"].apply(identificar_loja)
-
-    df_precos["Preco_Atual"] = df_precos["Preco_Atual"].apply(
+    df_precos["Preco Atual"] = df_precos["Preco Atual"].apply(
         normalizar_preco
     )
 
     df_precos = df_precos.dropna(
-        subset=["Preco_Atual"]
+        subset=["Preco Atual"]
     )
-
-    df_precos = df_precos[
-        df_precos["Preco_Atual"] > 0
-    ]
-
-    if df_precos.empty:
-        st.error("O CSV foi lido, mas todos os preços estão zerados ou inválidos.")
-        st.write("Verifique o arquivo data/precos_coletados.csv")
-        st.stop()
 
     df = pd.merge(
         df_precos,
@@ -434,12 +389,6 @@ def carregar_dados():
         ]
     )
 
-    if df.empty:
-        st.error("Nenhuma GPU do CSV bateu com a base técnica.")
-        st.write("GPUs encontradas no CSV:")
-        st.write(df_precos["GPU"].tolist())
-        st.stop()
-
     return df
 
 
@@ -453,17 +402,17 @@ df = carregar_dados()
 # HERO
 # ============================================================
 
-st.markdown(
-    """
-    <div class="hero-box">
-        <div class="hero-title">🎮 Radar GPU Gamer BR</div>
-        <div class="hero-subtitle">
-            Dashboard gamer com coleta automática de preços.
-        </div>
+st.markdown("""
+<div class="hero-box">
+    <div class="hero-title">
+        🎮 Radar GPU Gamer BR
     </div>
-    """,
-    unsafe_allow_html=True
-)
+
+    <div class="hero-subtitle">
+        Dashboard gamer com coleta automática de preços.
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # ============================================================
 # FILTROS
@@ -506,18 +455,21 @@ with st.sidebar:
 df_filtrado = df.copy()
 
 if marca != "Todas":
+
     df_filtrado = df_filtrado[
         df_filtrado["Marca"] == marca
     ]
 
 df_filtrado = df_filtrado[
-    df_filtrado["Preco_Atual"] <= preco_maximo
+    df_filtrado["Preco Atual"] <= preco_maximo
 ]
 
 if df_filtrado.empty:
+
     st.warning(
         "Nenhuma GPU encontrada com os filtros atuais."
     )
+
     st.stop()
 
 df_filtrado["Score"] = df_filtrado.apply(
@@ -526,19 +478,29 @@ df_filtrado["Score"] = df_filtrado.apply(
 )
 
 df_filtrado["Desconto_%"] = (
+
     (
         (
             df_filtrado["Preco_Antigo"] -
-            df_filtrado["Preco_Atual"]
+            df_filtrado["Preco Atual"]
         )
+
         /
+
         df_filtrado["Preco_Antigo"]
+
     ) * 100
+
 ).round(1)
 
 df_filtrado["Custo_por_FPS"] = (
-    df_filtrado["Preco_Atual"] /
+
+    df_filtrado["Preco Atual"]
+
+    /
+
     df_filtrado["FPS_1080p"]
+
 ).round(2)
 
 df_filtrado = df_filtrado.sort_values(
@@ -553,7 +515,7 @@ df_filtrado = df_filtrado.sort_values(
 melhor = df_filtrado.iloc[0]
 
 menor_preco = df_filtrado.sort_values(
-    by="Preco_Atual"
+    by="Preco Atual"
 ).iloc[0]
 
 maior_desconto = df_filtrado.sort_values(
@@ -572,7 +534,7 @@ col1.metric(
 col2.metric(
     "💰 Menor preço",
     menor_preco["GPU"],
-    formatar_moeda(menor_preco["Preco_Atual"])
+    formatar_moeda(menor_preco["Preco Atual"])
 )
 
 col3.metric(
@@ -593,7 +555,7 @@ st.markdown(
 df_exibicao = df_filtrado.copy()
 
 df_exibicao["Preço Atual"] = (
-    df_exibicao["Preco_Atual"]
+    df_exibicao["Preco Atual"]
     .apply(formatar_moeda)
 )
 
@@ -642,7 +604,7 @@ grafico = alt.Chart(df_filtrado).mark_bar().encode(
     tooltip=[
         "GPU",
         "Score",
-        "Preco_Atual"
+        "Preco Atual"
     ]
 
 )
@@ -653,7 +615,7 @@ st.altair_chart(
 )
 
 # ============================================================
-# LINKS DE COMPRA
+# LINKS
 # ============================================================
 
 st.markdown(
@@ -663,57 +625,42 @@ st.markdown(
 
 for _, row in df_filtrado.iterrows():
 
-    c1, c2, c3, c4 = st.columns([4, 1.2, 1.2, 1.2])
+    c1, c2, c3, c4 = st.columns([4,1,1,1])
 
-    with c1:
-        st.markdown(
-            f"""
-            **{row['GPU']} - {row['Modelo']}**  
-            {row['Loja']}
-            """
-        )
+    c1.markdown(
 
-    with c2:
-        st.markdown(
-            f"""
-            <div style="font-size:18px; font-weight:700; color:white; padding-top:8px;">
-                {formatar_moeda(row['Preco_Atual'])}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        f"**{row['GPU']} - {row['Modelo']}**  \n"
 
-    with c3:
-        st.markdown(
-            f"""
-            <div style="font-size:16px; font-weight:700; color:white; padding-top:8px;">
-                Score: {row['Score']}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        f"{row['Loja']}"
+    )
 
-    with c4:
-        st.markdown(
-            f"""
-            <a href="{row['Link']}" target="_blank" style="text-decoration:none;">
-                <div style="
-                    background: linear-gradient(135deg,#22c55e,#16a34a);
-                    color: white;
-                    padding: 11px 16px;
-                    border-radius: 10px;
-                    font-weight: 800;
-                    text-align: center;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-                ">
-                    🛒 Comprar
-                </div>
-            </a>
-            """,
-            unsafe_allow_html=True
-        )
+    c2.markdown(
+        f"**{formatar_moeda(row['Preco Atual'])}**"
+    )
 
-    st.markdown(
-        "<hr style='border:0.5px solid #1e293b; margin:12px 0;'>",
+    c3.markdown(
+        f"Score: **{row['Score']}**"
+    )
+
+    c4.markdown(
+        f"""
+        <a href="{row['Link']}"
+           target="_blank"
+           rel="noopener noreferrer">
+
+            <button style="
+                background: linear-gradient(135deg,#22c55e,#16a34a);
+                color: white;
+                border: none;
+                padding: 8px 14px;
+                border-radius: 10px;
+                font-weight: bold;
+                cursor: pointer;
+                width: 100%;
+            ">
+                🛒 Comprar
+            </button>
+        </a>
+        """,
         unsafe_allow_html=True
     )
