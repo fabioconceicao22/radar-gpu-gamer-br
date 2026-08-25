@@ -129,6 +129,19 @@ def termos_relevantes(produto: str) -> set[str]:
     return termos
 
 
+def url_de_produto(link: str, loja: str) -> bool:
+    caminho = urlparse(link).path.lower()
+    regras = {
+        "KaBuM": ("/produto/",),
+        "Pichau": ("placa-de-video",),
+        "TerabyteShop": ("/produto/",),
+        "Mercado Livre": ("/p/", "/up/"),
+        "Amazon": ("/dp/", "/gp/product/"),
+    }
+    marcadores = regras.get(loja)
+    return bool(marcadores and any(marcador in caminho for marcador in marcadores))
+
+
 def descobrir_links(page: Page, produto: str, loja: str, limite: int = 2) -> list[str]:
     modelo_busca = PAGINAS_DE_BUSCA.get(loja)
     if not modelo_busca:
@@ -155,6 +168,8 @@ def descobrir_links(page: Page, produto: str, loja: str, limite: int = 2) -> lis
                 continue
             dominio = parsed.netloc.lower().removeprefix("www.")
             if dominio != dominio_loja:
+                continue
+            if not url_de_produto(href, loja):
                 continue
             texto = f"{ancora.inner_text()} {parsed.path}".lower()
             pontuacao = sum(1 for termo in termos if termo in texto)
