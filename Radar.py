@@ -13,6 +13,19 @@ st.set_page_config(
     layout="wide"
 )
 
+tema = st.sidebar.radio(
+    "🎨 Tema",
+    ["Escuro", "Claro"],
+    horizontal=True,
+    help="Altere a aparência do dashboard."
+)
+tema_claro = tema == "Claro"
+cor_fundo = "#f8fafc" if tema_claro else "#020817"
+cor_card = "#ffffff" if tema_claro else "#081226"
+cor_texto = "#0f172a" if tema_claro else "#f8fafc"
+cor_borda = "#cbd5e1" if tema_claro else "#334155"
+plotly_template = "plotly_white" if tema_claro else "plotly_dark"
+
 # ============================================================
 # CSS PREMIUM
 # ============================================================
@@ -152,6 +165,29 @@ section[data-testid="stSidebar"] {
     font-size: 12px;
 }
 
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown(f"""
+<style>
+.stApp {{
+    background: {cor_fundo};
+    color: {cor_texto};
+}}
+h1, h2, h3, h4, h5, h6, p, span, label {{
+    color: {cor_texto} !important;
+}}
+section[data-testid="stSidebar"] {{
+    background: {cor_card};
+    border-right: 1px solid {cor_borda};
+}}
+.kpi-card, .chart-card, .link-row, [data-testid="stDataFrame"] {{
+    background: {cor_card};
+    border-color: {cor_borda};
+}}
+.kpi-value, .kpi-title, .hero-title, .hero-subtitle, .small-muted {{
+    color: {cor_texto} !important;
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -385,6 +421,8 @@ def carregar_dados():
 
     df = df_base.copy()
     df["Origem_Preco"] = "Base fixa"
+    df["Data_Coleta"] = pd.NaT
+    df["Status_Link"] = "base"
 
     if not os.path.exists(caminho_csv):
         return df
@@ -422,6 +460,17 @@ def carregar_dados():
         if "loja" not in df_precos.columns:
             df_precos["loja"] = df_precos["link"].apply(identificar_loja)
 
+        if "data_coleta" not in df_precos.columns:
+            df_precos["data_coleta"] = pd.NaT
+        df_precos["data_coleta"] = pd.to_datetime(
+            df_precos["data_coleta"],
+            errors="coerce",
+            utc=True
+        )
+
+        if "status" not in df_precos.columns:
+            df_precos["status"] = "ok"
+
         df_precos["GPU"] = df_precos.apply(
             lambda row: identificar_gpu(row["produto"], row["link"]),
             axis=1
@@ -441,10 +490,14 @@ def carregar_dados():
             "GPU",
             "loja",
             "link",
-            "Preco_Coletado"
+            "Preco_Coletado",
+            "data_coleta",
+            "status"
         ]].rename(columns={
             "loja": "Loja_Auto",
-            "link": "Link_Auto"
+            "link": "Link_Auto",
+            "data_coleta": "Data_Coleta_Auto",
+            "status": "Status_Link_Auto"
         })
 
         df = pd.merge(
@@ -482,7 +535,19 @@ def carregar_dados():
             axis=1
         )
 
-        colunas = df_base.columns.tolist() + ["Origem_Preco"]
+        df["Data_Coleta"] = df["Data_Coleta_Auto"]
+        df["Status_Link"] = df.apply(
+            lambda row: row["Status_Link_Auto"]
+            if pd.notna(row.get("Status_Link_Auto"))
+            else "base",
+            axis=1
+        )
+
+        colunas = df_base.columns.tolist() + [
+            "Origem_Preco",
+            "Data_Coleta",
+            "Status_Link"
+        ]
         return df[colunas]
 
     except Exception:
@@ -498,21 +563,47 @@ df = carregar_dados()
 with st.sidebar:
     st.markdown("## ⚙️ Filtros")
 
-    marcas = ["Todas"] + sorted(df["Marca"].dropna().unique().tolist())
+    busca = st.text_input(
+        "Pesquisar GPU ou modelo",
+        placeholder="Ex.: RTX 4060, Radeon, ASRock"
+    )
 
-    marca = st.selectbox("Marca", marcas)
+    marcas_disponiveis = sorted(df["Marca"].dropna().unique().tolist())
+    marcas = st.multiselect("Marca", marcas_disponiveis)
+
+    lojas_disponiveis = sorted(df["Loja"].dropna().unique().tolist())
+    lojas = st.multiselect("Loja", lojas_disponiveis)
+
+    vrams_disponiveis = sorted(df["VRAM"].dropna().astype(int).unique().tolist())
+    vrams = st.multiselect(
+        "Memória VRAM",
+        vrams_disponiveis,
+        format_func=lambda valor: f"{valor} GB"
+    )
 
     foco = st.selectbox(
         "Foco da análise",
         ["Gamer 1080p", "Streamer", "Gamer 1440p"]
     )
 
-    preco_maximo = st.slider(
-        "Preço máximo",
-        min_value=1000,
-        max_value=10000,
-        value=6000,
+    limite_preco = max(1000, int(df["Preco_Atual"].max() // 100 * 100 + 100))
+    faixa_preco = st.slider(
+        "Faixa de preço",
+        min_value=0,
+        max_value=limite_preco,
+        value=(0, limite_preco),
         step=100
+    )
+
+    origem = st.radio(
+        "Origem do preço",
+        ["Todas", "Automático", "Base fixa"],
+        horizontal=True
+    )
+
+    ordenar_por = st.selectbox(
+        "Ordenar por",
+        ["Melhor score", "Menor preço", "Maior FPS 1080p", "Maior desconto"]
     )
 
     st.markdown("---")
@@ -535,10 +626,29 @@ with st.sidebar:
 
 df_filtrado = df.copy()
 
-if marca != "Todas":
-    df_filtrado = df_filtrado[df_filtrado["Marca"] == marca]
+if busca.strip():
+    termo = busca.strip()
+    mascara_busca = (
+        df_filtrado["GPU"].astype(str).str.contains(termo, case=False, na=False, regex=False)
+        | df_filtrado["Modelo"].astype(str).str.contains(termo, case=False, na=False, regex=False)
+    )
+    df_filtrado = df_filtrado[mascara_busca]
 
-df_filtrado = df_filtrado[df_filtrado["Preco_Atual"] <= preco_maximo]
+if marcas:
+    df_filtrado = df_filtrado[df_filtrado["Marca"].isin(marcas)]
+
+if lojas:
+    df_filtrado = df_filtrado[df_filtrado["Loja"].isin(lojas)]
+
+if vrams:
+    df_filtrado = df_filtrado[df_filtrado["VRAM"].isin(vrams)]
+
+df_filtrado = df_filtrado[
+    df_filtrado["Preco_Atual"].between(faixa_preco[0], faixa_preco[1])
+]
+
+if origem != "Todas":
+    df_filtrado = df_filtrado[df_filtrado["Origem_Preco"] == origem]
 
 if df_filtrado.empty:
     st.warning("Nenhuma GPU encontrada com os filtros atuais.")
@@ -560,9 +670,16 @@ df_filtrado["Custo_por_FPS"] = (
     df_filtrado["Preco_Atual"] / df_filtrado["FPS_1080p"]
 ).round(2)
 
+ordenacoes = {
+    "Melhor score": ("Score", False),
+    "Menor preço": ("Preco_Atual", True),
+    "Maior FPS 1080p": ("FPS_1080p", False),
+    "Maior desconto": ("Desconto_%", False),
+}
+coluna_ordem, ordem_crescente = ordenacoes[ordenar_por]
 df_filtrado = df_filtrado.sort_values(
-    by="Score",
-    ascending=False
+    by=coluna_ordem,
+    ascending=ordem_crescente
 ).reset_index(drop=True)
 
 df_filtrado["#"] = df_filtrado.index + 1
@@ -579,6 +696,21 @@ st.markdown("""
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+datas_validas = pd.to_datetime(df_filtrado["Data_Coleta"], errors="coerce", utc=True).dropna()
+if not datas_validas.empty:
+    ultima_atualizacao = datas_validas.max().tz_convert("America/Sao_Paulo")
+    horas_desde_coleta = (
+        pd.Timestamp.now(tz="America/Sao_Paulo") - ultima_atualizacao
+    ).total_seconds() / 3600
+    st.caption(
+        f"Dados automáticos atualizados em {ultima_atualizacao:%d/%m/%Y às %H:%M} "
+        f"• {len(datas_validas)} ofertas verificadas"
+    )
+    if horas_desde_coleta > 36:
+        st.warning("Os dados automáticos têm mais de 36 horas. Confirme o preço na loja.")
+else:
+    st.info("Exibindo valores de referência até a primeira coleta automática.")
 
 # ============================================================
 # KPI CARDS
@@ -658,8 +790,20 @@ st.dataframe(
         "FPS_1440p",
         "Custo_por_FPS",
         "Score",
-        "Origem_Preco"
+        "Origem_Preco",
+        "Data_Coleta",
+        "Link"
     ]],
+    column_config={
+        "Data_Coleta": st.column_config.DatetimeColumn(
+            "Atualizado em",
+            format="DD/MM/YYYY HH:mm"
+        ),
+        "Link": st.column_config.LinkColumn(
+            "Abrir oferta",
+            display_text="Visitar loja"
+        )
+    },
     use_container_width=True,
     hide_index=True,
     height=300
@@ -681,7 +825,7 @@ def grafico_barra(df_plot, y, titulo):
         df_plot,
         x="GPU",
         y=y,
-        template="plotly_dark"
+        template=plotly_template
     )
 
     fig.update_traces(
@@ -691,9 +835,9 @@ def grafico_barra(df_plot, y, titulo):
     fig.update_layout(
         title=titulo,
         height=230,
-        paper_bgcolor="#081226",
-        plot_bgcolor="#081226",
-        font_color="white",
+        paper_bgcolor=cor_card,
+        plot_bgcolor=cor_card,
+        font_color=cor_texto,
         margin=dict(l=10, r=10, t=38, b=10),
         xaxis_title="",
         yaxis_title="",
@@ -706,7 +850,7 @@ def grafico_barra(df_plot, y, titulo):
     )
 
     fig.update_yaxes(
-        gridcolor="#1e293b"
+        gridcolor=cor_borda
     )
 
     return fig
@@ -752,6 +896,20 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+rotulos_oferta = {
+    f"{row['GPU']} — {row['Loja']} — {formatar_moeda(row['Preco_Atual'])}": row["Link"]
+    for _, row in df_filtrado.iterrows()
+}
+oferta_escolhida = st.selectbox(
+    "Escolha uma oferta para visitar",
+    list(rotulos_oferta.keys())
+)
+st.link_button(
+    "🔗 Abrir oferta selecionada",
+    rotulos_oferta[oferta_escolhida],
+    use_container_width=True
+)
+
 for _, row in df_filtrado.iterrows():
 
     c1, c2, c3, c4 = st.columns([4, 1.5, 1.2, 1.2])
@@ -784,3 +942,4 @@ for _, row in df_filtrado.iterrows():
             <div class="buy-btn">🛒 Comprar</div>
         </a>
         """, unsafe_allow_html=True)
+
