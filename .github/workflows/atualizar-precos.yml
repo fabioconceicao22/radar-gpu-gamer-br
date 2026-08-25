@@ -2,6 +2,14 @@ name: Atualizar preços das GPUs
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "coletar_precos.py"
+      - "data/links.csv"
+      - "requirements.txt"
+      - ".github/workflows/atualizar-precos.yml"
   pull_request:
     paths:
       - "Radar.py"
@@ -52,4 +60,3 @@ jobs:
           git add data/precos_coletados.csv
           git commit -m "chore: atualizar preços coletados"
           git push
-
