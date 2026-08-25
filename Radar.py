@@ -2,6 +2,7 @@ import os
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
 # ============================================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -23,173 +24,98 @@ tema_claro = tema == "Claro"
 cor_fundo = "#f8fafc" if tema_claro else "#020817"
 cor_card = "#ffffff" if tema_claro else "#081226"
 cor_texto = "#0f172a" if tema_claro else "#f8fafc"
-cor_borda = "#cbd5e1" if tema_claro else "#334155"
+cor_borda = "#dbe4f0" if tema_claro else "#1e293b"
+cor_muted = "#64748b" if tema_claro else "#94a3b8"
+cor_hover = "#f1f5f9" if tema_claro else "#111827"
+cor_grid = "#e2e8f0" if tema_claro else "#1e293b"
 plotly_template = "plotly_white" if tema_claro else "plotly_dark"
 
 # ============================================================
-# CSS PREMIUM
+# DESIGN SYSTEM
 # ============================================================
-
-st.markdown("""
-<style>
-
-.stApp {
-    background: #020817;
-    color: #f8fafc;
-}
-
-.main .block-container {
-    padding-top: 0.4rem;
-    padding-bottom: 0.5rem;
-    padding-left: 0.8rem;
-    padding-right: 0.8rem;
-    max-width: 100%;
-}
-
-#MainMenu, footer, header {
-    visibility: hidden;
-}
-
-h1, h2, h3, h4, h5, h6, p, span, label {
-    color: #f8fafc !important;
-}
-
-section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg,#020817,#0f172a);
-    border-right: 1px solid #1e293b;
-}
-
-.stSelectbox div[data-baseweb="select"] {
-    background-color: #f8fafc !important;
-    color: #020817 !important;
-    border-radius: 10px;
-}
-
-.stSelectbox div[data-baseweb="select"] * {
-    color: #020817 !important;
-}
-
-.hero-box {
-    background: linear-gradient(135deg,#081226,#1e3a8a);
-    padding: 18px 22px;
-    border-radius: 18px;
-    border: 1px solid #334155;
-    box-shadow: 0 8px 28px rgba(0,0,0,0.45);
-    margin-bottom: 12px;
-}
-
-.hero-title {
-    font-size: 32px;
-    font-weight: 900;
-    letter-spacing: -0.5px;
-}
-
-.hero-subtitle {
-    font-size: 14px;
-    color: #cbd5e1;
-    margin-top: 4px;
-}
-
-.kpi-card {
-    background: linear-gradient(135deg,#081226,#111c44);
-    border: 1px solid #334155;
-    border-radius: 18px;
-    padding: 14px 16px;
-    min-height: 105px;
-    box-shadow: 0 8px 22px rgba(0,0,0,0.35);
-}
-
-.kpi-title {
-    color: #cbd5e1;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.kpi-value {
-    color: #ffffff;
-    font-size: 24px;
-    font-weight: 900;
-    margin-top: 6px;
-}
-
-.kpi-sub {
-    color: #22c55e;
-    font-size: 13px;
-    font-weight: 800;
-    margin-top: 6px;
-}
-
-.section-title {
-    font-size: 22px;
-    font-weight: 900;
-    margin-top: 14px;
-    margin-bottom: 8px;
-}
-
-[data-testid="stDataFrame"] {
-    background-color: #081226;
-    border-radius: 14px;
-    border: 1px solid #334155;
-    padding: 5px;
-}
-
-.chart-card {
-    background: #081226;
-    border: 1px solid #334155;
-    border-radius: 14px;
-    padding: 8px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.30);
-}
-
-.link-row {
-    background: linear-gradient(135deg,#081226,#0f172a);
-    border: 1px solid #1e293b;
-    border-radius: 12px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-}
-
-.buy-btn {
-    background: linear-gradient(135deg,#22c55e,#16a34a);
-    color: white !important;
-    padding: 10px 16px;
-    border-radius: 10px;
-    font-weight: 900;
-    text-align: center;
-    box-shadow: 0 5px 14px rgba(22,163,74,0.35);
-    text-decoration: none;
-}
-
-.small-muted {
-    color: #94a3b8;
-    font-size: 12px;
-}
-
-</style>
-""", unsafe_allow_html=True)
 
 st.markdown(f"""
 <style>
+:root {{
+  --bg:{cor_fundo}; --card:{cor_card}; --text:{cor_texto};
+  --muted:{cor_muted}; --border:{cor_borda}; --hover:{cor_hover};
+  --primary:#6366f1; --cyan:#06b6d4; --green:#10b981;
+}}
 .stApp {{
-    background: {cor_fundo};
-    color: {cor_texto};
+  background:
+    radial-gradient(circle at 90% -10%,rgba(99,102,241,.18),transparent 34rem),
+    radial-gradient(circle at 5% 30%,rgba(6,182,212,.09),transparent 28rem),
+    var(--bg);
+  color:var(--text);
 }}
-h1, h2, h3, h4, h5, h6, p, span, label {{
-    color: {cor_texto} !important;
+.main .block-container {{max-width:1440px;padding:1.4rem 2rem 3rem}}
+#MainMenu,footer{{visibility:hidden}}
+header[data-testid="stHeader"]{{background:transparent}}
+h1,h2,h3,h4,h5,h6,p,span,label{{color:var(--text)}}
+section[data-testid="stSidebar"]{{
+  background:color-mix(in srgb,var(--card) 94%,transparent);
+  border-right:1px solid var(--border);
 }}
-section[data-testid="stSidebar"] {{
-    background: {cor_card};
-    border-right: 1px solid {cor_borda};
+section[data-testid="stSidebar"]>div{{padding-top:1.25rem}}
+[data-baseweb="select"]>div,[data-testid="stTextInput"] input{{
+  background:var(--card)!important;border-color:var(--border)!important;color:var(--text)!important
 }}
-.kpi-card, .chart-card, .link-row, [data-testid="stDataFrame"] {{
-    background: {cor_card};
-    border-color: {cor_borda};
+[data-baseweb="tab-list"]{{
+  gap:.4rem;background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:.35rem
 }}
-.kpi-value, .kpi-title, .hero-title, .hero-subtitle, .small-muted {{
-    color: {cor_texto} !important;
+[data-baseweb="tab"]{{border-radius:10px;padding:.6rem 1rem}}
+[data-baseweb="tab"][aria-selected="true"]{{background:linear-gradient(135deg,#6366f1,#4f46e5)}}
+[data-baseweb="tab"][aria-selected="true"] p{{color:white!important}}
+.radar-header{{
+  position:relative;overflow:hidden;
+  background:linear-gradient(120deg,#4338ca,#1d4ed8 58%,#0891b2);
+  border:1px solid rgba(255,255,255,.18);border-radius:24px;
+  padding:2rem 2.2rem;margin-bottom:1rem;box-shadow:0 24px 60px rgba(15,23,42,.22)
+}}
+.radar-header:after{{
+  content:"";position:absolute;width:270px;height:270px;right:-70px;top:-120px;
+  border-radius:50%;border:48px solid rgba(255,255,255,.08)
+}}
+.eyebrow{{color:#c7d2fe!important;font-size:.76rem;font-weight:800;letter-spacing:.14em}}
+.radar-title{{
+  color:white!important;font-size:clamp(2rem,4vw,3.25rem);line-height:1.02;
+  font-weight:900;letter-spacing:-.045em;margin:.45rem 0 .65rem
+}}
+.radar-subtitle{{color:#e0e7ff!important;max-width:760px;line-height:1.6}}
+.status-pill{{
+  display:inline-flex;align-items:center;gap:.5rem;margin-top:1rem;padding:.45rem .75rem;
+  border-radius:999px;background:rgba(15,23,42,.26);border:1px solid rgba(255,255,255,.2);
+  color:white!important;font-size:.78rem;font-weight:750
+}}
+.status-dot{{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 0 5px rgba(52,211,153,.16)}}
+.section-title{{font-size:1.18rem;font-weight:850;letter-spacing:-.02em;margin:1.4rem 0 .25rem}}
+.section-copy{{color:var(--muted)!important;font-size:.88rem;margin-bottom:.85rem}}
+div[data-testid="stMetric"]{{
+  background:linear-gradient(145deg,var(--card),var(--hover));border:1px solid var(--border);
+  border-radius:18px;padding:1rem 1.1rem;box-shadow:0 10px 28px rgba(15,23,42,.06)
+}}
+div[data-testid="stMetric"] label{{color:var(--muted)!important;font-weight:700}}
+div[data-testid="stMetricValue"]{{font-weight:900;letter-spacing:-.035em}}
+div[data-testid="stVerticalBlockBorderWrapper"]{{
+  background:var(--card);border-color:var(--border)!important;border-radius:18px;
+  box-shadow:0 10px 30px rgba(15,23,42,.06)
+}}
+[data-testid="stDataFrame"]{{border:1px solid var(--border);border-radius:16px;overflow:hidden}}
+.stButton>button,.stLinkButton>a{{border-radius:12px!important;min-height:2.65rem;font-weight:750!important}}
+.stLinkButton>a{{background:linear-gradient(135deg,#4f46e5,#6366f1)!important;border:none!important;color:white!important}}
+.offer-store{{color:#6366f1!important;font-size:.74rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase}}
+.offer-name{{font-size:1rem;font-weight:850;line-height:1.35;min-height:2.7rem;margin:.35rem 0 .65rem}}
+.offer-price{{font-size:1.55rem;font-weight:900;letter-spacing:-.04em}}
+.offer-meta{{color:var(--muted)!important;font-size:.77rem;margin:.35rem 0 .8rem}}
+.sidebar-brand{{font-size:1.08rem;font-weight:900;letter-spacing:-.035em}}
+.sidebar-copy{{color:var(--muted)!important;font-size:.78rem;line-height:1.5;margin:.15rem 0 1rem}}
+@media(max-width:900px){{
+  .main .block-container{{padding:.8rem .8rem 2rem}}
+  .radar-header{{padding:1.4rem;border-radius:18px}}
 }}
 </style>
-""", unsafe_allow_html=True)
+""",unsafe_allow_html=True)
 
 # ============================================================
 # BASE TÉCNICA DAS GPUS
@@ -559,116 +485,63 @@ def carregar_dados():
 df = carregar_dados()
 
 # ============================================================
-# SIDEBAR
+# FILTROS E PROCESSAMENTO
 # ============================================================
 
 with st.sidebar:
-    st.markdown("## ⚙️ Filtros")
-
-    busca = st.text_input(
-        "Pesquisar GPU ou modelo",
-        placeholder="Ex.: RTX 4060, Radeon, ASRock"
+    st.markdown('<div class="sidebar-brand">◈ Radar GPU</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="sidebar-copy">Inteligência de preços e desempenho para sua próxima GPU.</div>',
+        unsafe_allow_html=True
     )
-
-    marcas_disponiveis = sorted(df["Marca"].dropna().unique().tolist())
-    marcas = st.multiselect("Marca", marcas_disponiveis)
-
-    lojas_disponiveis = sorted(df["Loja"].dropna().unique().tolist())
-    lojas = st.multiselect("Loja", lojas_disponiveis)
-
-    vrams_disponiveis = sorted(df["VRAM"].dropna().astype(int).unique().tolist())
+    st.markdown("### Filtros")
+    busca = st.text_input("GPU ou modelo", placeholder="RTX 4060, Radeon, ASRock...")
+    marcas = st.multiselect("Marca", sorted(df["Marca"].dropna().unique().tolist()))
+    lojas = st.multiselect("Loja", sorted(df["Loja"].dropna().unique().tolist()))
     vrams = st.multiselect(
-        "Memória VRAM",
-        vrams_disponiveis,
+        "Memória",
+        sorted(df["VRAM"].dropna().astype(int).unique().tolist()),
         format_func=lambda valor: f"{valor} GB"
     )
-
-    foco = st.selectbox(
-        "Foco da análise",
-        ["Gamer 1080p", "Streamer", "Gamer 1440p"]
-    )
-
+    foco = st.selectbox("Perfil de uso", ["Gamer 1080p", "Gamer 1440p", "Streamer"])
     limite_preco = max(1000, int(df["Preco_Atual"].max() // 100 * 100 + 100))
     faixa_preco = st.slider(
-        "Faixa de preço",
-        min_value=0,
-        max_value=limite_preco,
-        value=(0, limite_preco),
-        step=100
+        "Faixa de preço", 0, limite_preco, (0, limite_preco), 100, format="R$ %d"
     )
-
-    origem = st.radio(
-        "Origem do preço",
-        ["Todas", "Automático", "Base fixa"],
-        horizontal=True
-    )
-
+    origem = st.radio("Dados", ["Todas", "Automático", "Base fixa"], horizontal=True)
     ordenar_por = st.selectbox(
-        "Ordenar por",
-        ["Melhor score", "Menor preço", "Maior FPS 1080p", "Maior desconto"]
+        "Ordenar", ["Melhor score", "Menor preço", "Maior FPS 1080p", "Maior desconto"]
     )
-
-    st.markdown("---")
-    st.markdown("### 🧩 Sobre o projeto")
-    st.markdown(
-        """
-        O Radar GPU Gamer BR compara placas de vídeo por preço, desempenho e custo-benefício.
-
-        A automação compara lojas confiáveis e seleciona a melhor oferta válida,
-        com fallback para a base de referência.
-        """
-    )
-
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    st.markdown("**Versão 3.1.2**")
-    st.markdown("Desenvolvido com ❤️ por Fabio")
-
-# ============================================================
-# PROCESSAMENTO
-# ============================================================
+    st.divider()
+    st.caption("Versão 4.0 • Radar multiloja")
 
 df_filtrado = df.copy()
-
 if busca.strip():
     termo = busca.strip()
-    mascara_busca = (
+    df_filtrado = df_filtrado[
         df_filtrado["GPU"].astype(str).str.contains(termo, case=False, na=False, regex=False)
         | df_filtrado["Modelo"].astype(str).str.contains(termo, case=False, na=False, regex=False)
-    )
-    df_filtrado = df_filtrado[mascara_busca]
-
+    ]
 if marcas:
     df_filtrado = df_filtrado[df_filtrado["Marca"].isin(marcas)]
-
 if lojas:
     df_filtrado = df_filtrado[df_filtrado["Loja"].isin(lojas)]
-
 if vrams:
     df_filtrado = df_filtrado[df_filtrado["VRAM"].isin(vrams)]
-
 df_filtrado = df_filtrado[
     df_filtrado["Preco_Atual"].between(faixa_preco[0], faixa_preco[1])
 ]
-
 if origem != "Todas":
     df_filtrado = df_filtrado[df_filtrado["Origem_Preco"] == origem]
-
 if df_filtrado.empty:
-    st.warning("Nenhuma GPU encontrada com os filtros atuais.")
+    st.warning("Nenhuma GPU corresponde aos filtros atuais.")
     st.stop()
 
-df_filtrado["Score"] = df_filtrado.apply(
-    lambda row: calcular_score(row, foco),
-    axis=1
-)
-
+df_filtrado["Score"] = df_filtrado.apply(lambda row: calcular_score(row, foco), axis=1)
 df_filtrado["Desconto_%"] = (
-    (
-        (df_filtrado["Preco_Antigo"] - df_filtrado["Preco_Atual"])
-        / df_filtrado["Preco_Antigo"]
-    ) * 100
-).round(1)
-
+    ((df_filtrado["Preco_Antigo"] - df_filtrado["Preco_Atual"])
+     / df_filtrado["Preco_Antigo"]) * 100
+).clip(lower=0).round(1)
 df_filtrado["Custo_por_FPS"] = (
     df_filtrado["Preco_Atual"] / df_filtrado["FPS_1080p"]
 ).round(2)
@@ -680,269 +553,174 @@ ordenacoes = {
     "Maior desconto": ("Desconto_%", False),
 }
 coluna_ordem, ordem_crescente = ordenacoes[ordenar_por]
-df_filtrado = df_filtrado.sort_values(
-    by=coluna_ordem,
-    ascending=ordem_crescente
-).reset_index(drop=True)
-
+df_filtrado = df_filtrado.sort_values(coluna_ordem, ascending=ordem_crescente).reset_index(drop=True)
 df_filtrado["#"] = df_filtrado.index + 1
-
-# ============================================================
-# HERO
-# ============================================================
-
-st.markdown("""
-<div class="hero-box">
-    <div class="hero-title">🎮 Radar GPU Gamer BR</div>
-    <div class="hero-subtitle">
-        Menores preços em lojas confiáveis, desempenho e custo-benefício.
-    </div>
-</div>
-""", unsafe_allow_html=True)
 
 datas_validas = pd.to_datetime(df_filtrado["Data_Coleta"], errors="coerce", utc=True).dropna()
 if not datas_validas.empty:
     ultima_atualizacao = datas_validas.max().tz_convert("America/Sao_Paulo")
+    texto_atualizacao = f"Atualizado {ultima_atualizacao:%d/%m às %H:%M}"
     horas_desde_coleta = (
         pd.Timestamp.now(tz="America/Sao_Paulo") - ultima_atualizacao
     ).total_seconds() / 3600
-    st.caption(
-        f"Dados automáticos atualizados em {ultima_atualizacao:%d/%m/%Y às %H:%M} "
-        f"• {len(datas_validas)} ofertas verificadas"
-    )
-    if horas_desde_coleta > 36:
-        st.warning("Os dados automáticos têm mais de 36 horas. Confirme o preço na loja.")
 else:
-    st.info("Exibindo valores de referência até a primeira coleta automática.")
+    texto_atualizacao = "Aguardando coleta automática"
+    horas_desde_coleta = 999
 
-# ============================================================
-# KPI CARDS
-# ============================================================
+st.markdown(f"""
+<div class="radar-header">
+  <div class="eyebrow">GPU MARKET INTELLIGENCE</div>
+  <div class="radar-title">Escolha melhor.<br>Pague menos.</div>
+  <div class="radar-subtitle">
+    Ofertas verificadas em lojas confiáveis, benchmarks objetivos e ranking
+    inteligente para encontrar a GPU ideal.
+  </div>
+  <div class="status-pill"><span class="status-dot"></span>
+    {texto_atualizacao} · {len(datas_validas)} ofertas verificadas
+  </div>
+</div>
+""",unsafe_allow_html=True)
 
-melhor = df_filtrado.iloc[0]
-menor_preco = df_filtrado.sort_values(by="Preco_Atual").iloc[0]
-maior_desconto = df_filtrado.sort_values(by="Desconto_%", ascending=False).iloc[0]
-fps_medio = int(df_filtrado["FPS_1080p"].mean())
+if horas_desde_coleta > 36:
+    st.warning("A última coleta tem mais de 36 horas. Confirme preço e estoque na loja.")
 
-c1, c2, c3, c4 = st.columns(4)
-
-with c1:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-title">🖥️ GPUs analisadas</div>
-        <div class="kpi-value">{len(df_filtrado)}</div>
-        <div class="kpi-sub">Placas de vídeo</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with c2:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-title">🏷️ Menor preço</div>
-        <div class="kpi-value">{formatar_moeda(menor_preco["Preco_Atual"])}</div>
-        <div class="kpi-sub">{menor_preco["GPU"]}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with c3:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-title">🏆 Melhor score</div>
-        <div class="kpi-value">{melhor["Score"]}</div>
-        <div class="kpi-sub">{melhor["GPU"]}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with c4:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-title">📈 Média FPS 1080p</div>
-        <div class="kpi-value">{fps_medio}</div>
-        <div class="kpi-sub">Quadros por segundo</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ============================================================
-# RANKING
-# ============================================================
-
-st.markdown(
-    '<div class="section-title">🏁 Ranking de GPUs</div>',
-    unsafe_allow_html=True
+aba_geral, aba_comparador, aba_ofertas = st.tabs(
+    ["Visão geral", "Comparador", "Melhores ofertas"]
 )
 
-df_exibicao = df_filtrado.copy()
+with aba_geral:
+    melhor = df_filtrado.iloc[0]
+    menor = df_filtrado.sort_values("Preco_Atual").iloc[0]
+    desempenho = df_filtrado.sort_values("FPS_1080p", ascending=False).iloc[0]
+    automaticas = int((df_filtrado["Origem_Preco"] == "Automático").sum())
 
-df_exibicao["Preço Atual"] = df_exibicao["Preco_Atual"].apply(formatar_moeda)
-df_exibicao["Preço Antigo"] = df_exibicao["Preco_Antigo"].apply(formatar_moeda)
-df_exibicao["Desconto"] = df_exibicao["Desconto_%"].astype(str) + "%"
-df_exibicao["VRAM"] = df_exibicao["VRAM"].astype(str) + " GB"
+    k1, k2, k3, k4 = st.columns(4)
+    k1.metric("GPUs no radar", len(df_filtrado), f"{automaticas} verificadas")
+    k2.metric("Menor preço", formatar_moeda(menor["Preco_Atual"]), menor["GPU"])
+    k3.metric("Melhor score", melhor["GPU"], f"{melhor['Score']:.1f} pontos")
+    k4.metric("Maior desempenho", f"{int(desempenho['FPS_1080p'])} FPS", desempenho["GPU"])
 
-st.dataframe(
-    df_exibicao[[
-        "#",
-        "GPU",
-        "Modelo",
-        "Marca",
-        "Loja",
-        "Preço Atual",
-        "Preço Antigo",
-        "Desconto",
-        "VRAM",
-        "FPS_1080p",
-        "FPS_1440p",
-        "Custo_por_FPS",
-        "Score",
-        "Origem_Preco",
-        "Data_Coleta",
-        "Link"
-    ]],
-    column_config={
-        "Data_Coleta": st.column_config.DatetimeColumn(
-            "Atualizado em",
-            format="DD/MM/YYYY HH:mm"
-        ),
-        "Link": st.column_config.LinkColumn(
-            "Abrir oferta",
-            display_text="Visitar loja"
+    st.markdown('<div class="section-title">Panorama do mercado</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-copy">Preço, desempenho e eficiência das opções filtradas.</div>', unsafe_allow_html=True)
+    g1, g2 = st.columns([1.15, 1])
+
+    with g1:
+        fig_score = px.bar(
+            df_filtrado.sort_values("Score"), x="Score", y="GPU", orientation="h",
+            color="Score", color_continuous_scale=["#334155", "#6366f1", "#22d3ee"],
+            template=plotly_template, text="Score"
         )
-    },
-    use_container_width=True,
-    hide_index=True,
-    height=300
-)
+        fig_score.update_layout(
+            title="Ranking inteligente", height=390, paper_bgcolor=cor_card,
+            plot_bgcolor=cor_card, font_color=cor_texto, coloraxis_showscale=False,
+            margin=dict(l=10,r=15,t=55,b=20), xaxis_title="", yaxis_title="",
+            xaxis=dict(gridcolor=cor_grid)
+        )
+        fig_score.update_traces(textposition="outside")
+        st.plotly_chart(fig_score, use_container_width=True)
 
-# ============================================================
-# COMPARATIVOS
-# ============================================================
+    with g2:
+        fig_market = px.scatter(
+            df_filtrado, x="Preco_Atual", y="FPS_1080p", size="VRAM",
+            color="Marca", hover_name="GPU", hover_data=["Loja", "Score"],
+            template=plotly_template,
+            color_discrete_sequence=["#6366f1","#06b6d4","#f59e0b"]
+        )
+        fig_market.update_layout(
+            title="Preço × desempenho", height=390, paper_bgcolor=cor_card,
+            plot_bgcolor=cor_card, font_color=cor_texto,
+            margin=dict(l=15,r=15,t=55,b=20), xaxis_title="Preço atual (R$)",
+            yaxis_title="FPS em 1080p", xaxis=dict(gridcolor=cor_grid),
+            yaxis=dict(gridcolor=cor_grid), legend_title=""
+        )
+        st.plotly_chart(fig_market, use_container_width=True)
 
-st.markdown(
-    '<div class="section-title">📊 Comparativos</div>',
-    unsafe_allow_html=True
-)
-
-g1, g2, g3, g4 = st.columns(4)
-
-def grafico_barra(df_plot, y, titulo):
-    fig = px.bar(
-        df_plot,
-        x="GPU",
-        y=y,
-        template=plotly_template
+    st.markdown('<div class="section-title">Ranking detalhado</div>', unsafe_allow_html=True)
+    tabela = df_filtrado.copy()
+    tabela["Preço"] = tabela["Preco_Atual"].apply(formatar_moeda)
+    tabela["VRAM"] = tabela["VRAM"].astype(int).astype(str) + " GB"
+    tabela["Atualizado"] = pd.to_datetime(tabela["Data_Coleta"], errors="coerce", utc=True)
+    st.dataframe(
+        tabela[["#","GPU","Marca","Loja","Preço","VRAM","FPS_1080p","FPS_1440p",
+                "Score","Origem_Preco","Atualizado","Link"]],
+        column_config={
+            "FPS_1080p": st.column_config.ProgressColumn("FPS 1080p",min_value=0,max_value=200,format="%d"),
+            "FPS_1440p": st.column_config.ProgressColumn("FPS 1440p",min_value=0,max_value=150,format="%d"),
+            "Score": st.column_config.NumberColumn("Score",format="%.1f"),
+            "Origem_Preco": "Origem",
+            "Atualizado": st.column_config.DatetimeColumn("Atualizado",format="DD/MM HH:mm"),
+            "Link": st.column_config.LinkColumn("Oferta",display_text="Abrir loja ↗"),
+        },
+        hide_index=True, use_container_width=True, height=360
     )
 
-    fig.update_traces(
-        marker_color="#2563eb"
+with aba_comparador:
+    st.markdown('<div class="section-title">Compare lado a lado</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-copy">Selecione até três GPUs para analisar os principais indicadores.</div>', unsafe_allow_html=True)
+    opcoes = df_filtrado["GPU"].tolist()
+    comparar = st.multiselect(
+        "GPUs para comparar", opcoes, default=opcoes[:min(3,len(opcoes))], max_selections=3
     )
+    if len(comparar) < 2:
+        st.info("Selecione pelo menos duas GPUs.")
+    else:
+        df_comp = df_filtrado[df_filtrado["GPU"].isin(comparar)].copy()
+        cards = st.columns(len(df_comp))
+        for coluna, (_, row) in zip(cards, df_comp.iterrows()):
+            with coluna:
+                with st.container(border=True):
+                    st.caption(f"{row['Marca']} · {row['Loja']}")
+                    st.subheader(row["GPU"])
+                    st.metric("Preço",formatar_moeda(row["Preco_Atual"]))
+                    a,b = st.columns(2)
+                    a.metric("1080p",f"{int(row['FPS_1080p'])} FPS")
+                    b.metric("1440p",f"{int(row['FPS_1440p'])} FPS")
+                    st.caption(f"{int(row['VRAM'])} GB · {int(row['Consumo_W'])} W · Score {row['Score']:.1f}")
 
-    fig.update_layout(
-        title=titulo,
-        height=230,
-        paper_bgcolor=cor_card,
-        plot_bgcolor=cor_card,
-        font_color=cor_texto,
-        margin=dict(l=10, r=10, t=38, b=10),
-        xaxis_title="",
-        yaxis_title="",
-        showlegend=False
+        categorias=["FPS 1080p","FPS 1440p","Streaming","Gamer","Eficiência"]
+        fig_radar=go.Figure()
+        for _,row in df_comp.iterrows():
+            valores=[
+                min(row["FPS_1080p"]/2,100), min(row["FPS_1440p"]/1.5,100),
+                row["Streaming_Score"], row["Gamer_Score"],
+                min((row["FPS_1080p"]/row["Consumo_W"])*100,100)
+            ]
+            fig_radar.add_trace(go.Scatterpolar(
+                r=valores+[valores[0]],theta=categorias+[categorias[0]],
+                fill="toself",name=row["GPU"],opacity=.7
+            ))
+        fig_radar.update_layout(
+            title="Perfil comparativo normalizado",template=plotly_template,
+            paper_bgcolor=cor_card,font_color=cor_texto,height=480,
+            polar=dict(bgcolor=cor_card,radialaxis=dict(visible=True,range=[0,100],gridcolor=cor_grid),
+                       angularaxis=dict(gridcolor=cor_grid)),
+            margin=dict(l=40,r=40,t=70,b=40),legend=dict(orientation="h",y=-.12)
+        )
+        st.plotly_chart(fig_radar,use_container_width=True)
+
+with aba_ofertas:
+    st.markdown('<div class="section-title">Ofertas verificadas</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-copy">Loja e link mudam automaticamente quando surge uma opção válida mais barata.</div>',
+        unsafe_allow_html=True
     )
+    ofertas=df_filtrado.sort_values("Preco_Atual").reset_index(drop=True)
+    for inicio in range(0,len(ofertas),3):
+        colunas=st.columns(3)
+        for coluna,(_,row) in zip(colunas,ofertas.iloc[inicio:inicio+3].iterrows()):
+            with coluna:
+                with st.container(border=True):
+                    origem_texto="Oferta verificada" if row["Origem_Preco"]=="Automático" else "Valor de referência"
+                    st.markdown(
+                        f'<div class="offer-store">{row["Loja"]}</div>'
+                        f'<div class="offer-name">{row["GPU"]}</div>'
+                        f'<div class="offer-price">{formatar_moeda(row["Preco_Atual"])}</div>'
+                        f'<div class="offer-meta">{origem_texto} · {int(row["VRAM"])} GB · '
+                        f'{int(row["FPS_1080p"])} FPS</div>',
+                        unsafe_allow_html=True
+                    )
+                    st.link_button("Ver oferta na loja ↗",row["Link"],use_container_width=True)
+    st.caption("Preços, estoque, frete e pagamento podem mudar. Confirme na loja antes da compra.")
 
-    fig.update_xaxes(
-        tickangle=-90,
-        tickfont=dict(size=9)
-    )
 
-    fig.update_yaxes(
-        gridcolor=cor_borda
-    )
-
-    return fig
-
-with g1:
-    st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-    st.plotly_chart(
-        grafico_barra(df_filtrado, "Score", "Score por GPU"),
-        use_container_width=True
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with g2:
-    st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-    st.plotly_chart(
-        grafico_barra(df_filtrado, "FPS_1080p", "FPS 1080p"),
-        use_container_width=True
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with g3:
-    st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-    st.plotly_chart(
-        grafico_barra(df_filtrado, "FPS_1440p", "FPS 1440p"),
-        use_container_width=True
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with g4:
-    st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-    st.plotly_chart(
-        grafico_barra(df_filtrado, "Custo_por_FPS", "Custo por FPS"),
-        use_container_width=True
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# ============================================================
-# LINKS DE COMPRA
-# ============================================================
-
-st.markdown(
-    '<div class="section-title">🛒 Links de compra</div>',
-    unsafe_allow_html=True
-)
-
-rotulos_oferta = {
-    f"{row['GPU']} — {row['Loja']} — {formatar_moeda(row['Preco_Atual'])}": row["Link"]
-    for _, row in df_filtrado.iterrows()
-}
-oferta_escolhida = st.selectbox(
-    "Escolha uma oferta para visitar",
-    list(rotulos_oferta.keys())
-)
-st.link_button(
-    "🔗 Abrir oferta selecionada",
-    rotulos_oferta[oferta_escolhida],
-    use_container_width=True
-)
-
-for _, row in df_filtrado.iterrows():
-
-    c1, c2, c3, c4 = st.columns([4, 1.5, 1.2, 1.2])
-
-    with c1:
-        st.markdown(f"""
-        <div class="link-row">
-            <b>{row['GPU']} - {row['Modelo']}</b><br>
-            <span class="small-muted">{row['Loja']} | {row['Origem_Preco']}</span>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c2:
-        st.markdown(f"""
-        <div style="font-size:17px; font-weight:900; padding-top:16px;">
-            {formatar_moeda(row['Preco_Atual'])}
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c3:
-        st.markdown(f"""
-        <div style="font-size:17px; font-weight:900; padding-top:16px;">
-            {row['Score']}
-        </div>
-        """, unsafe_allow_html=True)
-
-    with c4:
-        st.markdown(f"""
-        <a href="{row['Link']}" target="_blank" style="text-decoration:none;">
-            <div class="buy-btn">🛒 Comprar</div>
-        </a>
-        """, unsafe_allow_html=True)
 
