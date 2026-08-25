@@ -69,7 +69,7 @@ def limpar_preco(valor: object) -> float | None:
         preco = float(texto)
     except ValueError:
         return None
-    return round(preco, 2) if 500 <= preco <= 30_000 else None
+    return round(preco, 2) if 500 <= preco <= 10_000 else None
 
 
 def extrair_json_ld(page: Page) -> float | None:
@@ -133,6 +133,16 @@ def termos_relevantes(produto: str) -> set[str]:
 
 def url_de_produto(link: str, loja: str) -> bool:
     caminho = urlparse(link).path.lower()
+    termos_bloqueados = (
+        "pc-gamer",
+        "computador",
+        "desktop",
+        "notebook",
+        "kit-upgrade",
+        "suporte-placa",
+    )
+    if any(termo in caminho for termo in termos_bloqueados):
+        return False
     regras = {
         "KaBuM": ("/produto/",),
         "Pichau": ("placa-de-video",),
