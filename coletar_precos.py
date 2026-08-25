@@ -4,7 +4,7 @@ import json
 import re
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import quote_plus, urljoin, urlparse
 
 import pandas as pd
 from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
@@ -13,6 +13,14 @@ ARQUIVO_ENTRADA = Path("data/links.csv")
 ARQUIVO_SAIDA = Path("data/precos_coletados.csv")
 TIMEOUT_MS = 45_000
 TENTATIVAS = 3
+
+PAGINAS_DE_BUSCA = {
+    "KaBuM": "https://www.kabum.com.br/busca/{consulta}",
+    "Pichau": "https://www.pichau.com.br/search?q={consulta}",
+    "TerabyteShop": "https://www.terabyteshop.com.br/busca?str={consulta}",
+    "Mercado Livre": "https://lista.mercadolivre.com.br/{consulta}",
+    "Amazon": "https://www.amazon.com.br/s?k={consulta}",
+}
 
 SELETORES_PRECO = {
     "KaBuM": ["h4.finalPrice", "[data-testid='price-value']", ".finalPrice"],
@@ -110,6 +118,56 @@ def extrair_do_texto(page: Page) -> float | None:
     return min(precos) if precos else None
 
 
+def termos_relevantes(produto: str) -> set[str]:
+    ignorar = {"geforce", "radeon", "intel", "placa", "video", "de", "oc", "rgb", "gb"}
+    termos = set(re.findall(r"[a-z]+\d+[a-z]*|\d+gb|\d{4}", produto.lower()))
+    termos.update(
+        termo
+        for termo in re.findall(r"[a-z0-9]+", produto.lower())
+        if len(termo) >= 4 and termo not in ignorar
+    )
+    return termos
+
+
+def descobrir_links(page: Page, produto: str, loja: str, limite: int = 2) -> list[str]:
+    modelo_busca = PAGINAS_DE_BUSCA.get(loja)
+    if not modelo_busca:
+        return []
+
+    consulta = quote_plus(produto)
+    url_busca = modelo_busca.format(consulta=consulta)
+    try:
+        page.goto(url_busca, wait_until="domcontentloaded", timeout=TIMEOUT_MS)
+        page.wait_for_timeout(2500)
+    except Exception as erro:
+        print(f"[BUSCA] Falha ao pesquisar {produto} em {loja}: {erro}")
+        return []
+
+    dominio_loja = urlparse(url_busca).netloc.lower().removeprefix("www.")
+    termos = termos_relevantes(produto)
+    candidatos: dict[str, int] = {}
+
+    for ancora in page.locator("a[href]").all():
+        try:
+            href = urljoin(page.url, ancora.get_attribute("href") or "")
+            parsed = urlparse(href)
+            if parsed.scheme not in {"http", "https"}:
+                continue
+            dominio = parsed.netloc.lower().removeprefix("www.")
+            if dominio != dominio_loja:
+                continue
+            texto = f"{ancora.inner_text()} {parsed.path}".lower()
+            pontuacao = sum(1 for termo in termos if termo in texto)
+            if pontuacao >= max(1, min(2, len(termos))):
+                link_limpo = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+                candidatos[link_limpo] = max(candidatos.get(link_limpo, 0), pontuacao)
+        except Exception:
+            continue
+
+    ordenados = sorted(candidatos, key=lambda link: candidatos[link], reverse=True)
+    return ordenados[:limite]
+
+
 def coletar_preco(page: Page, link: str, loja: str) -> tuple[float | None, str, str]:
     ultimo_erro = "Preço não encontrado"
     for tentativa in range(1, TENTATIVAS + 1):
@@ -157,11 +215,36 @@ def main() -> None:
         page = contexto.new_page()
         for row in df_links.itertuples(index=False):
             loja = str(row.loja)
-            print(f"[COLETANDO] {row.produto} | {loja}")
-            preco, status, detalhe = coletar_preco(page, row.link, loja)
+            print(f"[PESQUISANDO] {row.produto} | {loja}")
+            links_candidatos = [row.link]
+            links_candidatos.extend(
+                link
+                for link in descobrir_links(page, row.produto, loja)
+                if link not in links_candidatos
+            )
+
+            ofertas = []
+            erros = []
+            for link_candidato in links_candidatos:
+                preco, status, detalhe = coletar_preco(page, link_candidato, loja)
+                if status == "ok" and preco:
+                    ofertas.append((preco, detalhe))
+                    print(f"[OFERTA] R$ {preco:.2f} | {detalhe}")
+                else:
+                    erros.append(detalhe)
+
+            if ofertas:
+                preco, link_final = min(ofertas, key=lambda oferta: oferta[0])
+                status = "ok"
+                detalhe = link_final
+            else:
+                preco = None
+                status = "erro"
+                detalhe = " | ".join(erros[-2:])[:360] or "Nenhuma oferta válida encontrada"
+
             resultados.append({
                 "produto": row.produto,
-                "link": row.link,
+                "link": detalhe if status == "ok" else row.link,
                 "link_final": detalhe if status == "ok" else "",
                 "loja": loja,
                 "preco": preco,
