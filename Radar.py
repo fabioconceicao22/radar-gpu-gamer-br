@@ -421,6 +421,8 @@ def carregar_dados():
 
     df = df_base.copy()
     df["Origem_Preco"] = "Base fixa"
+    df["Data_Coleta"] = pd.NaT
+    df["Status_Link"] = "base"
 
     if not os.path.exists(caminho_csv):
         return df
@@ -458,6 +460,17 @@ def carregar_dados():
         if "loja" not in df_precos.columns:
             df_precos["loja"] = df_precos["link"].apply(identificar_loja)
 
+        if "data_coleta" not in df_precos.columns:
+            df_precos["data_coleta"] = pd.NaT
+        df_precos["data_coleta"] = pd.to_datetime(
+            df_precos["data_coleta"],
+            errors="coerce",
+            utc=True
+        )
+
+        if "status" not in df_precos.columns:
+            df_precos["status"] = "ok"
+
         df_precos["GPU"] = df_precos.apply(
             lambda row: identificar_gpu(row["produto"], row["link"]),
             axis=1
@@ -477,10 +490,14 @@ def carregar_dados():
             "GPU",
             "loja",
             "link",
-            "Preco_Coletado"
+            "Preco_Coletado",
+            "data_coleta",
+            "status"
         ]].rename(columns={
             "loja": "Loja_Auto",
-            "link": "Link_Auto"
+            "link": "Link_Auto",
+            "data_coleta": "Data_Coleta_Auto",
+            "status": "Status_Link_Auto"
         })
 
         df = pd.merge(
@@ -518,7 +535,19 @@ def carregar_dados():
             axis=1
         )
 
-        colunas = df_base.columns.tolist() + ["Origem_Preco"]
+        df["Data_Coleta"] = df["Data_Coleta_Auto"]
+        df["Status_Link"] = df.apply(
+            lambda row: row["Status_Link_Auto"]
+            if pd.notna(row.get("Status_Link_Auto"))
+            else "base",
+            axis=1
+        )
+
+        colunas = df_base.columns.tolist() + [
+            "Origem_Preco",
+            "Data_Coleta",
+            "Status_Link"
+        ]
         return df[colunas]
 
     except Exception:
@@ -668,6 +697,21 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+datas_validas = pd.to_datetime(df_filtrado["Data_Coleta"], errors="coerce", utc=True).dropna()
+if not datas_validas.empty:
+    ultima_atualizacao = datas_validas.max().tz_convert("America/Sao_Paulo")
+    horas_desde_coleta = (
+        pd.Timestamp.now(tz="America/Sao_Paulo") - ultima_atualizacao
+    ).total_seconds() / 3600
+    st.caption(
+        f"Dados automáticos atualizados em {ultima_atualizacao:%d/%m/%Y às %H:%M} "
+        f"• {len(datas_validas)} ofertas verificadas"
+    )
+    if horas_desde_coleta > 36:
+        st.warning("Os dados automáticos têm mais de 36 horas. Confirme o preço na loja.")
+else:
+    st.info("Exibindo valores de referência até a primeira coleta automática.")
+
 # ============================================================
 # KPI CARDS
 # ============================================================
@@ -747,9 +791,14 @@ st.dataframe(
         "Custo_por_FPS",
         "Score",
         "Origem_Preco",
+        "Data_Coleta",
         "Link"
     ]],
     column_config={
+        "Data_Coleta": st.column_config.DatetimeColumn(
+            "Atualizado em",
+            format="DD/MM/YYYY HH:mm"
+        ),
         "Link": st.column_config.LinkColumn(
             "Abrir oferta",
             display_text="Visitar loja"
@@ -893,5 +942,4 @@ for _, row in df_filtrado.iterrows():
             <div class="buy-btn">🛒 Comprar</div>
         </a>
         """, unsafe_allow_html=True)
-
 
