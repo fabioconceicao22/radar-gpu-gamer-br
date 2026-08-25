@@ -11,8 +11,8 @@ from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sy
 
 ARQUIVO_ENTRADA = Path("data/links.csv")
 ARQUIVO_SAIDA = Path("data/precos_coletados.csv")
-TIMEOUT_MS = 45_000
-TENTATIVAS = 3
+TIMEOUT_MS = 30_000
+TENTATIVAS = 2
 
 PAGINAS_DE_BUSCA = {
     "KaBuM": "https://www.kabum.com.br/busca/{consulta}",
@@ -21,6 +21,8 @@ PAGINAS_DE_BUSCA = {
     "Mercado Livre": "https://lista.mercadolivre.com.br/{consulta}",
     "Amazon": "https://www.amazon.com.br/s?k={consulta}",
 }
+
+LOJAS_CONFIAVEIS = tuple(PAGINAS_DE_BUSCA)
 
 SELETORES_PRECO = {
     "KaBuM": ["h4.finalPrice", "[data-testid='price-value']", ".finalPrice"],
@@ -229,31 +231,50 @@ def main() -> None:
         )
         page = contexto.new_page()
         for row in df_links.itertuples(index=False):
-            loja = str(row.loja)
-            print(f"[PESQUISANDO] {row.produto} | {loja}")
-            links_candidatos = [row.link]
-            links_candidatos.extend(
-                link
-                for link in descobrir_links(page, row.produto, loja)
-                if link not in links_candidatos
-            )
+            loja_preferida = str(row.loja)
+            print(f"[PESQUISANDO] {row.produto} em lojas confiáveis")
+            links_candidatos = [(row.link, identificar_loja(row.link))]
+            ordem_lojas = [loja_preferida] + [
+                loja for loja in LOJAS_CONFIAVEIS if loja != loja_preferida
+            ]
+            for loja_pesquisa in ordem_lojas:
+                for link in descobrir_links(
+                    page,
+                    row.produto,
+                    loja_pesquisa,
+                    limite=1
+                ):
+                    candidato = (link, loja_pesquisa)
+                    if candidato not in links_candidatos:
+                        links_candidatos.append(candidato)
 
             ofertas = []
             erros = []
-            for link_candidato in links_candidatos:
-                preco, status, detalhe = coletar_preco(page, link_candidato, loja)
+            for link_candidato, loja_candidata in links_candidatos:
+                preco, status, detalhe = coletar_preco(
+                    page,
+                    link_candidato,
+                    loja_candidata
+                )
                 if status == "ok" and preco:
-                    ofertas.append((preco, detalhe))
-                    print(f"[OFERTA] R$ {preco:.2f} | {detalhe}")
+                    ofertas.append((preco, detalhe, loja_candidata))
+                    print(
+                        f"[OFERTA] {loja_candidata} | "
+                        f"R$ {preco:.2f} | {detalhe}"
+                    )
                 else:
-                    erros.append(detalhe)
+                    erros.append(f"{loja_candidata}: {detalhe}")
 
             if ofertas:
-                preco, link_final = min(ofertas, key=lambda oferta: oferta[0])
+                preco, link_final, loja = min(
+                    ofertas,
+                    key=lambda oferta: oferta[0]
+                )
                 status = "ok"
                 detalhe = link_final
             else:
                 preco = None
+                loja = loja_preferida
                 status = "erro"
                 detalhe = " | ".join(erros[-2:])[:360] or "Nenhuma oferta válida encontrada"
 
