@@ -8,8 +8,10 @@ Os produtos e links monitorados ficam em `data/links.csv`. O coletor:
 
 - valida e remove links duplicados;
 - identifica a loja pelo domínio;
-- pesquisa novamente o produto na loja e avalia links compatíveis com o modelo;
-- compara o link cadastrado com os candidatos encontrados e seleciona a menor oferta válida;
+- pesquisa o produto em KaBuM, Pichau, TerabyteShop, Mercado Livre e Amazon;
+- aceita somente páginas individuais de produtos em domínios permitidos;
+- compara os candidatos e seleciona a menor oferta válida entre as lojas;
+- atualiza automaticamente o preço, o nome da loja e o link vencedor;
 - tenta obter o preço via JSON-LD, seletor específico da loja e texto da página;
 - repete tentativas em falhas temporárias;
 - grava URL final, status, erro e data da coleta em `data/precos_coletados.csv`.
