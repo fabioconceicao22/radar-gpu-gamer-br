@@ -154,6 +154,37 @@ def url_de_produto(link: str, loja: str) -> bool:
     return bool(marcadores and any(marcador in caminho for marcador in marcadores))
 
 
+def link_compativel_com_produto(link: str, produto: str) -> bool:
+    texto_link = urlparse(link).path.lower().replace("-", " ")
+    produto_normalizado = produto.lower()
+    modelos = re.findall(r"\b\d{4}\b", produto_normalizado)
+    if modelos and not any(modelo in texto_link for modelo in modelos):
+        return False
+    if "super" in produto_normalizado and "super" not in texto_link:
+        return False
+    if " ti " not in f" {produto_normalizado} " and re.search(r"\bti\b", texto_link):
+        return False
+    return True
+
+
+def preco_compativel_com_produto(produto: str, preco: float) -> bool:
+    texto = produto.lower()
+    limites_minimos = {
+        "4070": 3_000,
+        "5060": 1_800,
+        "4060": 1_800,
+        "3060": 1_500,
+        "b580": 1_500,
+        "7600": 1_200,
+        "6600": 1_000,
+    }
+    minimo = next(
+        (valor for modelo, valor in limites_minimos.items() if modelo in texto),
+        500,
+    )
+    return minimo <= preco <= 10_000
+
+
 def descobrir_links(page: Page, produto: str, loja: str, limite: int = 2) -> list[str]:
     modelo_busca = PAGINAS_DE_BUSCA.get(loja)
     if not modelo_busca:
@@ -182,6 +213,8 @@ def descobrir_links(page: Page, produto: str, loja: str, limite: int = 2) -> lis
             if dominio != dominio_loja:
                 continue
             if not url_de_produto(href, loja):
+                continue
+            if not link_compativel_com_produto(href, produto):
                 continue
             texto = f"{ancora.inner_text()} {parsed.path}".lower()
             pontuacao = sum(1 for termo in termos if termo in texto)
@@ -266,14 +299,21 @@ def main() -> None:
                     link_candidato,
                     loja_candidata
                 )
-                if status == "ok" and preco:
+                if (
+                    status == "ok"
+                    and preco
+                    and preco_compativel_com_produto(row.produto, preco)
+                ):
                     ofertas.append((preco, detalhe, loja_candidata))
                     print(
                         f"[OFERTA] {loja_candidata} | "
                         f"R$ {preco:.2f} | {detalhe}"
                     )
                 else:
-                    erros.append(f"{loja_candidata}: {detalhe}")
+                    motivo = detalhe
+                    if status == "ok" and preco:
+                        motivo = f"preço incompatível ({preco:.2f})"
+                    erros.append(f"{loja_candidata}: {motivo}")
 
             if ofertas:
                 preco, link_final, loja = min(
