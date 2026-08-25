@@ -11,8 +11,8 @@ from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sy
 
 ARQUIVO_ENTRADA = Path("data/links.csv")
 ARQUIVO_SAIDA = Path("data/precos_coletados.csv")
-TIMEOUT_MS = 45_000
-TENTATIVAS = 3
+TIMEOUT_MS = 30_000
+TENTATIVAS = 2
 
 PAGINAS_DE_BUSCA = {
     "KaBuM": "https://www.kabum.com.br/busca/{consulta}",
@@ -21,6 +21,8 @@ PAGINAS_DE_BUSCA = {
     "Mercado Livre": "https://lista.mercadolivre.com.br/{consulta}",
     "Amazon": "https://www.amazon.com.br/s?k={consulta}",
 }
+
+LOJAS_CONFIAVEIS = tuple(PAGINAS_DE_BUSCA)
 
 SELETORES_PRECO = {
     "KaBuM": ["h4.finalPrice", "[data-testid='price-value']", ".finalPrice"],
@@ -67,7 +69,7 @@ def limpar_preco(valor: object) -> float | None:
         preco = float(texto)
     except ValueError:
         return None
-    return round(preco, 2) if 500 <= preco <= 30_000 else None
+    return round(preco, 2) if 500 <= preco <= 10_000 else None
 
 
 def extrair_json_ld(page: Page) -> float | None:
@@ -131,6 +133,16 @@ def termos_relevantes(produto: str) -> set[str]:
 
 def url_de_produto(link: str, loja: str) -> bool:
     caminho = urlparse(link).path.lower()
+    termos_bloqueados = (
+        "pc-gamer",
+        "computador",
+        "desktop",
+        "notebook",
+        "kit-upgrade",
+        "suporte-placa",
+    )
+    if any(termo in caminho for termo in termos_bloqueados):
+        return False
     regras = {
         "KaBuM": ("/produto/",),
         "Pichau": ("placa-de-video",),
@@ -140,6 +152,37 @@ def url_de_produto(link: str, loja: str) -> bool:
     }
     marcadores = regras.get(loja)
     return bool(marcadores and any(marcador in caminho for marcador in marcadores))
+
+
+def link_compativel_com_produto(link: str, produto: str) -> bool:
+    texto_link = urlparse(link).path.lower().replace("-", " ")
+    produto_normalizado = produto.lower()
+    modelos = re.findall(r"\b\d{4}\b", produto_normalizado)
+    if modelos and not any(modelo in texto_link for modelo in modelos):
+        return False
+    if "super" in produto_normalizado and "super" not in texto_link:
+        return False
+    if " ti " not in f" {produto_normalizado} " and re.search(r"\bti\b", texto_link):
+        return False
+    return True
+
+
+def preco_compativel_com_produto(produto: str, preco: float) -> bool:
+    texto = produto.lower()
+    limites_minimos = {
+        "4070": 3_000,
+        "5060": 1_800,
+        "4060": 1_800,
+        "3060": 1_500,
+        "b580": 1_500,
+        "7600": 1_200,
+        "6600": 1_000,
+    }
+    minimo = next(
+        (valor for modelo, valor in limites_minimos.items() if modelo in texto),
+        500,
+    )
+    return minimo <= preco <= 10_000
 
 
 def descobrir_links(page: Page, produto: str, loja: str, limite: int = 2) -> list[str]:
@@ -170,6 +213,8 @@ def descobrir_links(page: Page, produto: str, loja: str, limite: int = 2) -> lis
             if dominio != dominio_loja:
                 continue
             if not url_de_produto(href, loja):
+                continue
+            if not link_compativel_com_produto(href, produto):
                 continue
             texto = f"{ancora.inner_text()} {parsed.path}".lower()
             pontuacao = sum(1 for termo in termos if termo in texto)
@@ -229,31 +274,57 @@ def main() -> None:
         )
         page = contexto.new_page()
         for row in df_links.itertuples(index=False):
-            loja = str(row.loja)
-            print(f"[PESQUISANDO] {row.produto} | {loja}")
-            links_candidatos = [row.link]
-            links_candidatos.extend(
-                link
-                for link in descobrir_links(page, row.produto, loja)
-                if link not in links_candidatos
-            )
+            loja_preferida = str(row.loja)
+            print(f"[PESQUISANDO] {row.produto} em lojas confiáveis")
+            links_candidatos = [(row.link, identificar_loja(row.link))]
+            ordem_lojas = [loja_preferida] + [
+                loja for loja in LOJAS_CONFIAVEIS if loja != loja_preferida
+            ]
+            for loja_pesquisa in ordem_lojas:
+                for link in descobrir_links(
+                    page,
+                    row.produto,
+                    loja_pesquisa,
+                    limite=1
+                ):
+                    candidato = (link, loja_pesquisa)
+                    if candidato not in links_candidatos:
+                        links_candidatos.append(candidato)
 
             ofertas = []
             erros = []
-            for link_candidato in links_candidatos:
-                preco, status, detalhe = coletar_preco(page, link_candidato, loja)
-                if status == "ok" and preco:
-                    ofertas.append((preco, detalhe))
-                    print(f"[OFERTA] R$ {preco:.2f} | {detalhe}")
+            for link_candidato, loja_candidata in links_candidatos:
+                preco, status, detalhe = coletar_preco(
+                    page,
+                    link_candidato,
+                    loja_candidata
+                )
+                if (
+                    status == "ok"
+                    and preco
+                    and preco_compativel_com_produto(row.produto, preco)
+                ):
+                    ofertas.append((preco, detalhe, loja_candidata))
+                    print(
+                        f"[OFERTA] {loja_candidata} | "
+                        f"R$ {preco:.2f} | {detalhe}"
+                    )
                 else:
-                    erros.append(detalhe)
+                    motivo = detalhe
+                    if status == "ok" and preco:
+                        motivo = f"preço incompatível ({preco:.2f})"
+                    erros.append(f"{loja_candidata}: {motivo}")
 
             if ofertas:
-                preco, link_final = min(ofertas, key=lambda oferta: oferta[0])
+                preco, link_final, loja = min(
+                    ofertas,
+                    key=lambda oferta: oferta[0]
+                )
                 status = "ok"
                 detalhe = link_final
             else:
                 preco = None
+                loja = loja_preferida
                 status = "erro"
                 detalhe = " | ".join(erros[-2:])[:360] or "Nenhuma oferta válida encontrada"
 

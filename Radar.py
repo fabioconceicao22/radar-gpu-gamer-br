@@ -612,12 +612,13 @@ with st.sidebar:
         """
         O Radar GPU Gamer BR compara placas de vídeo por preço, desempenho e custo-benefício.
 
-        Dados atualizados via CSV com fallback para base fixa.
+        A automação compara lojas confiáveis e seleciona a melhor oferta válida,
+        com fallback para a base de referência.
         """
     )
 
     st.markdown("<br><br>", unsafe_allow_html=True)
-    st.markdown("**Versão 3.0.0**")
+    st.markdown("**Versão 3.1.0**")
     st.markdown("Desenvolvido com ❤️ por Fabio")
 
 # ============================================================
@@ -692,7 +693,7 @@ st.markdown("""
 <div class="hero-box">
     <div class="hero-title">🎮 Radar GPU Gamer BR</div>
     <div class="hero-subtitle">
-        Análise, comparação e ranking das melhores placas de vídeo.
+        Menores preços em lojas confiáveis, desempenho e custo-benefício.
     </div>
 </div>
 """, unsafe_allow_html=True)
