@@ -1,50 +1,122 @@
-# Radar GPU Gamer BR
+<div align="center">
 
-Dashboard em Streamlit para comparar placas de vídeo por preço, desempenho e custo-benefício.
+# 🎮 Radar GPU Gamer BR
 
-## Automação de preços
+### Compare GPUs por preço, desempenho e custo-benefício em um só lugar.
 
-Os produtos e links monitorados ficam em `data/links.csv`. O coletor:
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-dashboard-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![CI](https://github.com/fabioconceicao22/radar-gpu-gamer-br/actions/workflows/ci.yml/badge.svg)](https://github.com/fabioconceicao22/radar-gpu-gamer-br/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-- valida e remove links duplicados;
-- identifica a loja pelo domínio;
-- pesquisa o produto em KaBuM, Pichau, TerabyteShop, Mercado Livre e Amazon;
-- aceita somente páginas individuais de produtos em domínios permitidos;
-- compara os candidatos e seleciona a menor oferta válida entre as lojas;
-- atualiza automaticamente o preço, o nome da loja e o link vencedor;
-- tenta obter o preço via JSON-LD, seletor específico da loja e texto da página;
-- repete tentativas em falhas temporárias;
-- grava URL final, status, erro e data da coleta em `data/precos_coletados.csv`.
+</div>
 
-O workflow `Atualizar preços das GPUs` roda duas vezes por dia e também pode ser iniciado manualmente na aba **Actions**. Quando há mudanças, o próprio workflow atualiza o CSV.
+## Sobre o projeto
 
-O dashboard diferencia valores automáticos de valores de referência, mostra o horário da última coleta e recomenda confirmar preço, estoque e frete na loja antes da compra.
+O **Radar GPU Gamer BR** é um dashboard em Python e Streamlit que centraliza ofertas e ajuda a encontrar placas de vídeo com melhor relação entre preço e desempenho. Um coletor automatizado pesquisa lojas brasileiras, valida os resultados e atualiza a base pelo GitHub Actions.
 
-## Recursos do dashboard
+> [!IMPORTANT]
+> Preços, estoque e frete podem mudar. Confirme sempre as condições diretamente na loja antes da compra.
 
-- temas claro e escuro;
+## ✨ Recursos
+
 - pesquisa por GPU ou modelo;
-- filtros combináveis por marca, loja, VRAM, preço e origem;
-- ordenação por custo, desempenho, desconto ou score;
-- acesso direto à oferta selecionada.
+- filtros por marca, loja, VRAM, preço e origem;
+- ordenação por preço, desempenho, desconto ou score;
+- gráficos interativos e temas claro/escuro;
+- coleta por JSON-LD, seletores específicos e texto da página;
+- validação de URLs, produtos e faixas de preço;
+- atualização automática duas vezes ao dia.
 
-## Executar localmente
+## 🧰 Tecnologias
+
+| Área | Tecnologias |
+| --- | --- |
+| Aplicação | Python, Streamlit |
+| Dados | Pandas, CSV |
+| Visualização | Plotly |
+| Automação web | Playwright |
+| Integração contínua | GitHub Actions |
+
+## 🏗 Arquitetura
+
+```text
+radar-gpu-gamer-br/
+├── .github/workflows/       # CI e atualização automatizada
+├── data/                    # entradas e resultados da coleta
+├── tests/                   # testes automatizados
+├── Radar.py                 # dashboard Streamlit
+├── coletar_precos.py        # coleta, validação e persistência
+└── requirements.txt
+```
+
+```mermaid
+flowchart LR
+    A[data/links.csv] --> B[Coletor Playwright]
+    B --> C{Validação}
+    C -->|válida| D[data/precos_coletados.csv]
+    C -->|inválida| E[Status e erro]
+    D --> F[Dashboard Streamlit]
+    E --> F
+```
+
+## 🚀 Como executar
+
+Requer Python 3.11 ou superior e Git.
 
 ```bash
-python -m pip install -r requirements.txt
+git clone https://github.com/fabioconceicao22/radar-gpu-gamer-br.git
+cd radar-gpu-gamer-br
+python -m venv .venv
+```
+
+```bash
+# Windows
+.venv\Scripts\activate
+
+# Linux ou macOS
+source .venv/bin/activate
+```
+
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 playwright install chromium
-python coletar_precos.py
 streamlit run Radar.py
 ```
 
-## Formato de `data/links.csv`
+Para atualizar os preços manualmente:
 
-Use CSV separado por ponto e vírgula com as colunas:
+```bash
+python coletar_precos.py
+```
 
-```text
+## 📄 Formato dos dados
+
+`data/links.csv` utiliza `;` como separador:
+
+```csv
 produto;link;loja
 GeForce RTX 4060 8GB;https://exemplo.com/produto;Loja
 ```
 
-As colunas antigas extras continuam sendo aceitas.
+## ✅ Qualidade
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+A integração contínua verifica sintaxe e testes em pushes e pull requests.
+
+## 🤝 Contribuição e segurança
+
+Leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de contribuir. Para vulnerabilidades, consulte [SECURITY.md](SECURITY.md) e não publique detalhes sensíveis em issues.
+
+## 📜 Licença
+
+Distribuído sob a [licença MIT](LICENSE).
+
+## 👤 Autor
+
+**Fabio Leite** · [GitHub](https://github.com/fabioconceicao22) · [LinkedIn](https://www.linkedin.com/in/fabio-concei%C3%A7%C3%A3o95/)
 
