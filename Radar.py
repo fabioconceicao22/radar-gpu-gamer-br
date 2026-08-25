@@ -618,7 +618,7 @@ with st.sidebar:
     )
 
     st.markdown("<br><br>", unsafe_allow_html=True)
-    st.markdown("**Versão 3.1.0**")
+    st.markdown("**Versão 3.1.1**")
     st.markdown("Desenvolvido com ❤️ por Fabio")
 
 # ============================================================
