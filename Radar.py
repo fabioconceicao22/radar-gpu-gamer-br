@@ -415,7 +415,7 @@ def calcular_score(row, foco):
     return round(score, 2)
 
 
-@st.cache_data
+@st.cache_data(ttl=900)
 def carregar_dados():
     caminho_csv = "data/precos_coletados.csv"
 
@@ -617,7 +617,7 @@ with st.sidebar:
     )
 
     st.markdown("<br><br>", unsafe_allow_html=True)
-    st.markdown("**Versão 2.0.0**")
+    st.markdown("**Versão 3.0.0**")
     st.markdown("Desenvolvido com ❤️ por Fabio")
 
 # ============================================================
