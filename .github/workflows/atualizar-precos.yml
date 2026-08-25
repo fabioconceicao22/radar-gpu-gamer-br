@@ -2,6 +2,13 @@ name: Atualizar preços das GPUs
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - "Radar.py"
+      - "coletar_precos.py"
+      - "data/links.csv"
+      - "requirements.txt"
+      - ".github/workflows/atualizar-precos.yml"
   schedule:
     - cron: "17 10,22 * * *"
 
@@ -34,6 +41,7 @@ jobs:
         run: python coletar_precos.py
 
       - name: Publicar resultados atualizados
+        if: github.event_name != 'pull_request'
         run: |
           if git diff --quiet -- data/precos_coletados.csv; then
             echo "Nenhuma alteração nos preços."
