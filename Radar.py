@@ -415,8 +415,10 @@ def calcular_score(row, foco):
     return round(score, 2)
 
 
-@st.cache_data(ttl=900)
+@st.cache_data(ttl=300)
 def carregar_dados():
+    # Altere esta chave quando o formato da coleta mudar.
+    cache_version = "ofertas-multiloja-v1"
     caminho_csv = "data/precos_coletados.csv"
 
     df = df_base.copy()
@@ -618,7 +620,7 @@ with st.sidebar:
     )
 
     st.markdown("<br><br>", unsafe_allow_html=True)
-    st.markdown("**Versão 3.1.1**")
+    st.markdown("**Versão 3.1.2**")
     st.markdown("Desenvolvido com ❤️ por Fabio")
 
 # ============================================================
