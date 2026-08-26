@@ -23,6 +23,8 @@ O **Radar GPU Gamer BR** é um dashboard em Python e Streamlit que centraliza of
 - pesquisa por GPU ou modelo;
 - filtros por marca, loja, VRAM, preço e origem;
 - ordenação por preço, desempenho, desconto ou score;
+- médias raster e ray tracing rastreáveis para 1080p e 1440p Ultra;
+- Índice Radar com pesos publicados para cada perfil de uso;
 - gráficos interativos e temas claro/escuro;
 - coleta por JSON-LD, seletores específicos e texto da página;
 - validação de URLs, produtos e faixas de preço;
@@ -37,6 +39,25 @@ O **Radar GPU Gamer BR** é um dashboard em Python e Streamlit que centraliza of
 | Visualização | Plotly |
 | Automação web | Playwright |
 | Integração contínua | GitHub Actions |
+
+## 📊 Metodologia de desempenho
+
+Os números de FPS são médias da **GPU Hierarchy 2026** do Tom's Hardware em
+resolução nativa e preset Ultra, sem upscaling ou geração de quadros. A base
+versionada em [`data/desempenho_gpus.csv`](data/desempenho_gpus.csv) registra a
+data de consulta, a fonte do benchmark e a ficha técnica de cada fabricante.
+
+O **Índice Radar** é relativo às GPUs monitoradas e combina desempenho, preço,
+eficiência, VRAM e, no perfil de jogos com streaming, ray tracing e suporte a
+encode AV1. Os pesos ficam publicados em [`desempenho.py`](desempenho.py).
+Assim, o ranking pode mudar quando uma oferta muda, mesmo que o benchmark seja
+o mesmo.
+
+- [resultados da GPU Hierarchy 2026](https://www.tomshardware.com/reviews/gpu-hierarchy%2C4388.html);
+- [metodologia, jogos e bancada de testes](https://www.tomshardware.com/pc-components/gpus/the-great-bench-gpu-retest-begins-how-were-testing-for-our-gpu-hierarchy-in-2026-and-why-upscaling-and-framegen-are-still-out).
+
+> FPS são médias comparativas, não uma previsão exata para todos os PCs. CPU,
+> drivers, memória, jogo, API gráfica e configurações podem alterar o resultado.
 
 ## 🏗 Arquitetura
 

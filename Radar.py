@@ -1,8 +1,15 @@
 import os
-import streamlit as st
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit as st
+
+from desempenho import (
+    adicionar_indice_radar,
+    carregar_base_tecnica,
+    descrever_metodologia,
+)
 
 # ============================================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -121,115 +128,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]{{
 # BASE TÉCNICA DAS GPUS
 # ============================================================
 
-base_tecnica = [
-    {
-        "GPU": "Radeon RX 7600 8GB",
-        "Modelo": "Sapphire Pulse OC",
-        "Marca": "AMD",
-        "Loja": "Pichau",
-        "Preco_Atual": 1679.99,
-        "Preco_Antigo": 1899.99,
-        "VRAM": 8,
-        "FPS_1080p": 112,
-        "FPS_1440p": 72,
-        "Streaming_Score": 72,
-        "Gamer_Score": 91,
-        "Consumo_W": 165,
-        "Link": "https://www.pichau.com.br/"
-    },
-    {
-        "GPU": "Radeon RX 6600 8GB",
-        "Modelo": "ASRock Challenger D",
-        "Marca": "AMD",
-        "Loja": "KaBuM",
-        "Preco_Atual": 1599.90,
-        "Preco_Antigo": 1899.99,
-        "VRAM": 8,
-        "FPS_1080p": 88,
-        "FPS_1440p": 52,
-        "Streaming_Score": 64,
-        "Gamer_Score": 84,
-        "Consumo_W": 132,
-        "Link": "https://www.kabum.com.br/"
-    },
-    {
-        "GPU": "GeForce RTX 4060 8GB",
-        "Modelo": "Galax 1-Click OC",
-        "Marca": "NVIDIA",
-        "Loja": "Amazon",
-        "Preco_Atual": 3399.99,
-        "Preco_Antigo": 3999.99,
-        "VRAM": 8,
-        "FPS_1080p": 108,
-        "FPS_1440p": 68,
-        "Streaming_Score": 93,
-        "Gamer_Score": 88,
-        "Consumo_W": 115,
-        "Link": "https://www.amazon.com.br/"
-    },
-    {
-        "GPU": "Intel Arc B580 12GB",
-        "Modelo": "ASRock Challenger OC",
-        "Marca": "Intel",
-        "Loja": "KaBuM",
-        "Preco_Atual": 1975.79,
-        "Preco_Antigo": 2299.99,
-        "VRAM": 12,
-        "FPS_1080p": 116,
-        "FPS_1440p": 78,
-        "Streaming_Score": 80,
-        "Gamer_Score": 89,
-        "Consumo_W": 190,
-        "Link": "https://www.kabum.com.br/"
-    },
-    {
-        "GPU": "GeForce RTX 4070 SUPER 12GB",
-        "Modelo": "Gigabyte Windforce OC",
-        "Marca": "NVIDIA",
-        "Loja": "Pichau",
-        "Preco_Atual": 4602.19,
-        "Preco_Antigo": 4899.99,
-        "VRAM": 12,
-        "FPS_1080p": 178,
-        "FPS_1440p": 132,
-        "Streaming_Score": 96,
-        "Gamer_Score": 94,
-        "Consumo_W": 220,
-        "Link": "https://www.pichau.com.br/"
-    },
-    {
-        "GPU": "GeForce RTX 5060 EPIC-X RGB OC 8GB",
-        "Modelo": "EPIC-X RGB OC Triple Fan",
-        "Marca": "NVIDIA",
-        "Loja": "Pichau",
-        "Preco_Atual": 2899.99,
-        "Preco_Antigo": 3299.99,
-        "VRAM": 8,
-        "FPS_1080p": 130,
-        "FPS_1440p": 82,
-        "Streaming_Score": 95,
-        "Gamer_Score": 90,
-        "Consumo_W": 145,
-        "Link": "https://www.pichau.com.br/"
-    },
-    {
-        "GPU": "GeForce RTX 3060 12GB",
-        "Modelo": "Galax 1-Click OC",
-        "Marca": "NVIDIA",
-        "Loja": "Amazon",
-        "Preco_Atual": 1857.72,
-        "Preco_Antigo": 2399.99,
-        "VRAM": 12,
-        "FPS_1080p": 96,
-        "FPS_1440p": 62,
-        "Streaming_Score": 86,
-        "Gamer_Score": 82,
-        "Consumo_W": 170,
-        "Link": "https://www.amazon.com.br/"
-    }
-]
-
-df_base = pd.DataFrame(base_tecnica)
+df_base = carregar_base_tecnica()
 
 # ============================================================
 # FUNÇÕES
@@ -295,50 +194,13 @@ def identificar_gpu(produto, link):
     if "4070" in texto and "super" in texto:
         return "GeForce RTX 4070 SUPER 12GB"
     if "5060" in texto:
-        return "GeForce RTX 5060 EPIC-X RGB OC 8GB"
+        return "GeForce RTX 5060 8GB"
     if "3060" in texto:
         return "GeForce RTX 3060 12GB"
     if "b580" in texto or "arc" in texto:
         return "Intel Arc B580 12GB"
 
     return produto
-
-
-def calcular_score(row, foco):
-    preco = row["Preco_Atual"]
-
-    if preco <= 0:
-        return 0
-
-    custo_fps = row["FPS_1080p"] / preco
-    eficiencia = row["FPS_1080p"] / row["Consumo_W"]
-    vram_score = row["VRAM"] * 5
-
-    if foco == "Streamer":
-        score = (
-            custo_fps * 1000 * 0.25 +
-            row["Streaming_Score"] * 0.35 +
-            row["Gamer_Score"] * 0.20 +
-            vram_score * 0.10 +
-            eficiencia * 50 * 0.10
-        )
-    elif foco == "Gamer 1440p":
-        custo_fps_1440 = row["FPS_1440p"] / preco
-        score = (
-            custo_fps_1440 * 1000 * 0.45 +
-            row["Gamer_Score"] * 0.25 +
-            vram_score * 0.15 +
-            eficiencia * 50 * 0.15
-        )
-    else:
-        score = (
-            custo_fps * 1000 * 0.45 +
-            row["Gamer_Score"] * 0.25 +
-            vram_score * 0.10 +
-            eficiencia * 50 * 0.20
-        )
-
-    return round(score, 2)
 
 
 @st.cache_data(ttl=300)
@@ -503,7 +365,9 @@ with st.sidebar:
         sorted(df["VRAM"].dropna().astype(int).unique().tolist()),
         format_func=lambda valor: f"{valor} GB"
     )
-    foco = st.selectbox("Perfil de uso", ["Gamer 1080p", "Gamer 1440p", "Streamer"])
+    foco = st.selectbox(
+        "Perfil de uso", ["Gamer 1080p", "Gamer 1440p", "Jogos + streaming"]
+    )
     limite_preco = max(1000, int(df["Preco_Atual"].max() // 100 * 100 + 100))
     faixa_preco = st.slider(
         "Faixa de preço", 0, limite_preco, (0, limite_preco), 100, format="R$ %d"
@@ -513,8 +377,9 @@ with st.sidebar:
         "Ordenar", ["Melhor score", "Menor preço", "Maior FPS 1080p", "Maior desconto"]
     )
     st.divider()
-    st.caption("Versão 4.0 • Radar multiloja")
+    st.caption("Versão 4.1 • benchmarks rastreáveis")
 
+df = adicionar_indice_radar(df, foco)
 df_filtrado = df.copy()
 if busca.strip():
     termo = busca.strip()
@@ -537,7 +402,6 @@ if df_filtrado.empty:
     st.warning("Nenhuma GPU corresponde aos filtros atuais.")
     st.stop()
 
-df_filtrado["Score"] = df_filtrado.apply(lambda row: calcular_score(row, foco), axis=1)
 df_filtrado["Desconto_%"] = (
     ((df_filtrado["Preco_Antigo"] - df_filtrado["Preco_Atual"])
      / df_filtrado["Preco_Antigo"]) * 100
@@ -572,8 +436,8 @@ st.markdown(f"""
   <div class="eyebrow">GPU MARKET INTELLIGENCE</div>
   <div class="radar-title">Escolha melhor.<br>Pague menos.</div>
   <div class="radar-subtitle">
-    Ofertas verificadas em lojas confiáveis, benchmarks objetivos e ranking
-    inteligente para encontrar a GPU ideal.
+    Ofertas verificadas em lojas confiáveis, benchmarks raster e ray tracing
+    com fonte publicada e um índice transparente para encontrar a GPU ideal.
   </div>
   <div class="status-pill"><span class="status-dot"></span>
     {texto_atualizacao} · {len(datas_validas)} ofertas verificadas
@@ -583,6 +447,30 @@ st.markdown(f"""
 
 if horas_desde_coleta > 36:
     st.warning("A última coleta tem mais de 36 horas. Confirme preço e estoque na loja.")
+
+benchmark_atualizado = df_base["Benchmark_Atualizado_Em"].max().strftime("%d/%m/%Y")
+st.caption(
+    "Desempenho: média de jogos em resolução nativa e preset Ultra, sem "
+    f"upscaling ou geração de quadros · base consultada em {benchmark_atualizado}."
+)
+with st.expander("Como o desempenho e o Índice Radar são calculados"):
+    st.markdown(
+        f"**Perfil selecionado:** {descrever_metodologia(foco)}. "
+        "Cada componente é normalizado entre as GPUs monitoradas; preço usa a "
+        "oferta atual. Por isso, o índice pode mudar quando os preços mudam."
+    )
+    st.markdown(
+        "**Fontes:** [GPU Hierarchy 2026 — resultados]"
+        "(https://www.tomshardware.com/reviews/gpu-hierarchy%2C4388.html) · "
+        "[metodologia e bancada de testes]"
+        "(https://www.tomshardware.com/pc-components/gpus/"
+        "the-great-bench-gpu-retest-begins-how-were-testing-for-our-gpu-"
+        "hierarchy-in-2026-and-why-upscaling-and-framegen-are-still-out)."
+    )
+    st.info(
+        "FPS são médias comparativas, não uma promessa para todos os jogos. "
+        "CPU, drivers, memória, API gráfica e configurações alteram o resultado."
+    )
 
 aba_geral, aba_comparador, aba_ofertas = st.tabs(
     ["Visão geral", "Comparador", "Melhores ofertas"]
@@ -598,7 +486,11 @@ with aba_geral:
     k1.metric("GPUs no radar", len(df_filtrado), f"{automaticas} verificadas")
     k2.metric("Menor preço", formatar_moeda(menor["Preco_Atual"]), menor["GPU"])
     k3.metric("Melhor score", melhor["GPU"], f"{melhor['Score']:.1f} pontos")
-    k4.metric("Maior desempenho", f"{int(desempenho['FPS_1080p'])} FPS", desempenho["GPU"])
+    k4.metric(
+        "Maior desempenho raster",
+        f"{desempenho['FPS_1080p']:.1f} FPS",
+        desempenho["GPU"],
+    )
 
     st.markdown('<div class="section-title">Panorama do mercado</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-copy">Preço, desempenho e eficiência das opções filtradas.</div>', unsafe_allow_html=True)
@@ -630,7 +522,7 @@ with aba_geral:
             title="Preço × desempenho", height=390, paper_bgcolor=cor_card,
             plot_bgcolor=cor_card, font_color=cor_texto,
             margin=dict(l=15,r=15,t=55,b=20), xaxis_title="Preço atual (R$)",
-            yaxis_title="FPS em 1080p", xaxis=dict(gridcolor=cor_grid),
+            yaxis_title="FPS médio raster · 1080p Ultra", xaxis=dict(gridcolor=cor_grid),
             yaxis=dict(gridcolor=cor_grid), legend_title=""
         )
         st.plotly_chart(fig_market, use_container_width=True)
@@ -642,13 +534,18 @@ with aba_geral:
     tabela["Atualizado"] = pd.to_datetime(tabela["Data_Coleta"], errors="coerce", utc=True)
     st.dataframe(
         tabela[["#","GPU","Marca","Loja","Preço","VRAM","FPS_1080p","FPS_1440p",
-                "Score","Origem_Preco","Atualizado","Link"]],
+                "FPS_RT_1080p","Score","Origem_Preco","Atualizado",
+                "Fonte_Especificacoes","Link"]],
         column_config={
-            "FPS_1080p": st.column_config.ProgressColumn("FPS 1080p",min_value=0,max_value=200,format="%d"),
-            "FPS_1440p": st.column_config.ProgressColumn("FPS 1440p",min_value=0,max_value=150,format="%d"),
+            "FPS_1080p": st.column_config.ProgressColumn("Raster 1080p Ultra",min_value=0,max_value=140,format="%.1f"),
+            "FPS_1440p": st.column_config.ProgressColumn("Raster 1440p Ultra",min_value=0,max_value=100,format="%.1f"),
+            "FPS_RT_1080p": st.column_config.NumberColumn("RT 1080p Ultra",format="%.1f"),
             "Score": st.column_config.NumberColumn("Score",format="%.1f"),
             "Origem_Preco": "Origem",
             "Atualizado": st.column_config.DatetimeColumn("Atualizado",format="DD/MM HH:mm"),
+            "Fonte_Especificacoes": st.column_config.LinkColumn(
+                "Ficha técnica", display_text="Abrir fonte ↗"
+            ),
             "Link": st.column_config.LinkColumn("Oferta",display_text="Abrir loja ↗"),
         },
         hide_index=True, use_container_width=True, height=360
@@ -673,17 +570,27 @@ with aba_comparador:
                     st.subheader(row["GPU"])
                     st.metric("Preço",formatar_moeda(row["Preco_Atual"]))
                     a,b = st.columns(2)
-                    a.metric("1080p",f"{int(row['FPS_1080p'])} FPS")
-                    b.metric("1440p",f"{int(row['FPS_1440p'])} FPS")
-                    st.caption(f"{int(row['VRAM'])} GB · {int(row['Consumo_W'])} W · Score {row['Score']:.1f}")
+                    a.metric("Raster 1080p",f"{row['FPS_1080p']:.1f} FPS")
+                    b.metric("Raster 1440p",f"{row['FPS_1440p']:.1f} FPS")
+                    av1 = "AV1 encode" if row["AV1_Encode"] else "sem AV1 encode"
+                    st.caption(
+                        f"{int(row['VRAM'])} GB · {int(row['Consumo_W'])} W · "
+                        f"{av1} · Índice {row['Score']:.1f}"
+                    )
 
-        categorias=["FPS 1080p","FPS 1440p","Streaming","Gamer","Eficiência"]
+        categorias=["Raster 1080p","Raster 1440p","Ray tracing","Eficiência","VRAM"]
+        max_1080 = df_base["FPS_1080p"].max()
+        max_1440 = df_base["FPS_1440p"].max()
+        max_rt = df_base["FPS_RT_1080p"].max()
+        max_eficiencia = (df_base["FPS_1080p"] / df_base["Consumo_W"]).max()
         fig_radar=go.Figure()
         for _,row in df_comp.iterrows():
             valores=[
-                min(row["FPS_1080p"]/2,100), min(row["FPS_1440p"]/1.5,100),
-                row["Streaming_Score"], row["Gamer_Score"],
-                min((row["FPS_1080p"]/row["Consumo_W"])*100,100)
+                row["FPS_1080p"] / max_1080 * 100,
+                row["FPS_1440p"] / max_1440 * 100,
+                row["FPS_RT_1080p"] / max_rt * 100,
+                (row["FPS_1080p"] / row["Consumo_W"]) / max_eficiencia * 100,
+                min(row["VRAM"] / 12 * 100, 100),
             ]
             fig_radar.add_trace(go.Scatterpolar(
                 r=valores+[valores[0]],theta=categorias+[categorias[0]],
@@ -716,11 +623,15 @@ with aba_ofertas:
                         f'<div class="offer-name">{row["GPU"]}</div>'
                         f'<div class="offer-price">{formatar_moeda(row["Preco_Atual"])}</div>'
                         f'<div class="offer-meta">{origem_texto} · {int(row["VRAM"])} GB · '
-                        f'{int(row["FPS_1080p"])} FPS</div>',
+                        f'{row["FPS_1080p"]:.1f} FPS raster médio*</div>',
                         unsafe_allow_html=True
                     )
                     st.link_button("Ver oferta na loja ↗",row["Link"],use_container_width=True)
-    st.caption("Preços, estoque, frete e pagamento podem mudar. Confirme na loja antes da compra.")
+    st.caption(
+        "* Média 1080p Ultra da suíte referenciada. Preços, estoque, frete e "
+        "pagamento podem mudar; confirme na loja antes da compra."
+    )
+
 
 
 
